@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install @xenova/transformers)",
+      "Bash(node index.js)"
+    ]
+  }
+}

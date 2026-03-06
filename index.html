@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뜨개질 — Knitting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="css/variables.css?v=2">
+  <link rel="stylesheet" href="css/base.css?v=2">
+  <link rel="stylesheet" href="css/app.css?v=2">
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- Left: Note List -->
+    <aside class="app__notes" id="notesSidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-header__title">노트</span>
+        <span class="sidebar-header__count" id="noteCount">0</span>
+        <button type="button" class="sidebar-toggle" id="notesToggle" title="접기">&#9664;</button>
+      </div>
+      <div class="sidebar-actions">
+        <button class="sidebar-actions__btn" id="newNoteBtn">+ 새 노트</button>
+        <button class="sidebar-actions__btn sidebar-actions__btn--secondary" id="newBookshelfBtn">+ 새 책장</button>
+      </div>
+      <div class="bulk-toolbar" id="bulkToolbar" style="display:none">
+        <span class="bulk-toolbar__count" id="bulkCount">0</span>
+        <span class="bulk-toolbar__label">개 선택</span>
+        <button class="bulk-toolbar__btn" id="bulkMoveBtn">이동</button>
+        <button class="bulk-toolbar__btn bulk-toolbar__btn--danger" id="bulkDeleteBtn">삭제</button>
+        <button class="bulk-toolbar__btn bulk-toolbar__btn--cancel" id="bulkCancelBtn">&times;</button>
+      </div>
+      <div class="note-list" id="noteList">
+        <div class="note-list__empty">노트가 없습니다.<br>새 노트를 만들어보세요.</div>
+      </div>
+    </aside>
+    <div class="resize-handle resize-handle--notes" id="notesResizeHandle" title="드래그하여 에디터 너비 조절"></div>
+    <button type="button" class="panel-expand panel-expand--left" id="notesExpand" title="노트 펼치기">&#9654;</button>
+
+    <!-- Center: Note Editor -->
+    <main class="app__editor">
+
+      <!-- Toolbar -->
+      <div class="editor-toolbar" id="editorToolbar">
+        <div class="editor-toolbar__types" id="noteTypeSwitch">
+          <button class="editor-toolbar__type is-active" data-type="blank">빈 노트</button>
+          <button class="editor-toolbar__type" data-type="template">템플릿</button>
+        </div>
+        <div class="editor-toolbar__actions">
+          <button class="editor-toolbar__save" id="saveNoteBtn"><span>저장</span></button>
+        </div>
+      </div>
+
+      <!-- Find / Replace Bar -->
+      <div class="editor-find" id="editorFind">
+        <input type="text" class="editor-find__input" placeholder="찾기..." id="findInput">
+        <input type="text" class="editor-find__input" placeholder="바꾸기..." id="replaceInput">
+        <span class="editor-find__count" id="findCount"></span>
+        <button class="editor-find__btn" id="findPrev" title="이전">&uarr;</button>
+        <button class="editor-find__btn" id="findNext" title="다음">&darr;</button>
+        <button class="editor-find__btn" id="replaceOne">바꾸기</button>
+        <button class="editor-find__btn" id="replaceAll">모두</button>
+        <button class="editor-find__btn editor-find__btn--close" id="findClose">&times;</button>
+      </div>
+
+      <!-- Resizable body area (centered, symmetric) -->
+      <div class="editor-body-wrapper">
+        <div class="resize-handle resize-handle--editor resize-handle--editor-left" id="editorResizeLeft" title="드래그하여 작성 영역 너비 조절"></div>
+        <div class="editor-body" id="editorBody">
+
+      <!-- Floating Format Toolbar -->
+      <div class="format-toolbar" id="formatToolbar">
+        <button data-cmd="bold" title="굵게 (Ctrl+B)"><b>B</b></button>
+        <button data-cmd="italic" title="기울임 (Ctrl+I)"><i>I</i></button>
+        <button data-cmd="underline" title="밑줄 (Ctrl+U)"><u>U</u></button>
+        <button data-cmd="strikeThrough" title="취소선"><s>S</s></button>
+        <span class="format-toolbar__sep"></span>
+        <button data-cmd="h1" title="제목 1">H1</button>
+        <button data-cmd="h2" title="제목 2">H2</button>
+        <button data-cmd="h3" title="제목 3">H3</button>
+        <span class="format-toolbar__sep"></span>
+        <button data-cmd="createLink" title="링크 (Ctrl+K)">&#128279;</button>
+        <button data-cmd="insertUnorderedList" title="목록">&#8226;</button>
+        <button data-cmd="blockquote" title="인용">&#10078;</button>
+      </div>
+
+      <!-- Blank Note Editor -->
+      <div class="editor-blank is-active" id="blankNote">
+        <input class="editor-blank__title" id="blankTitle" type="text" placeholder="제목을 입력하세요">
+        <div class="editor-blank__content" id="blankContent" contenteditable="true" data-placeholder="여기에 자유롭게 작성하세요..."></div>
+      </div>
+
+      <!-- Template Note Editor -->
+      <div class="editor-template" id="templateNote">
+        <input class="editor-template__title" id="templateTitle" type="text" placeholder="제목을 입력하세요">
+        <div class="editor-template__form" id="templateForm">
+          <div class="editor-template__question">
+            <label>오늘 하루 어떤 감각이 인상적이었나요?</label>
+            <textarea class="editor-template__input" data-question="1" rows="3" placeholder="시각, 청각, 촉각, 미각, 후각 중..."></textarea>
+          </div>
+          <div class="editor-template__question">
+            <label>그 순간 어떤 생각이 들었나요?</label>
+            <textarea class="editor-template__input" data-question="2" rows="3" placeholder="떠오른 생각이나 감정..."></textarea>
+          </div>
+          <div class="editor-template__question">
+            <label>지금 이 순간의 나에게 한마디?</label>
+            <textarea class="editor-template__input" data-question="3" rows="3" placeholder="자유롭게..."></textarea>
+          </div>
+        </div>
+      </div>
+
+        </div>
+        <div class="resize-handle resize-handle--editor resize-handle--editor-right" id="editorResizeRight" title="드래그하여 작성 영역 너비 조절"></div>
+        <div class="editor-hint" id="editorHint">
+          <span class="editor-hint__text" id="hintText"></span>
+          <button class="editor-hint__close" id="hintClose">&times;</button>
+        </div>
+      </div>
+
+      <div class="editor-status" id="editorStatus">
+        <span id="charCount">0자</span>
+      </div>
+
+    </main>
+
+    <div class="resize-handle resize-handle--panel" id="panelResizeHandle" title="드래그하여 에디터 너비 조절"></div>
+
+    <!-- Right: Panel (바구니) -->
+    <aside class="app__panel" id="rightPanel">
+      <div class="panel-tabs">
+        <button class="panel-tabs__btn is-active" data-panel="basket" id="tabBasket">바구니</button>
+        <button class="panel-tabs__btn" data-panel="graph" id="tabGraph">뜨개판</button>
+        <button type="button" class="sidebar-toggle" id="panelToggle" title="접기">&#9654;</button>
+      </div>
+
+      <!-- Basket Panel (올 바구니) -->
+      <div class="panel-content is-active" id="panelBasket">
+        <div class="basket-list" id="basketList"></div>
+        <p class="basket-list__empty" id="basketEmpty">
+          잡은 올이 없습니다.<br>
+          텍스트를 선택하고 우클릭 →<br>올 잡기를 해보세요.
+        </p>
+      </div>
+
+      <!-- Graph Panel (뜨개판) -->
+      <div class="panel-content" id="panelGraph">
+        <div class="graph-toolbar" id="graphToolbar">
+          <select id="graphFilterSource" class="graph-toolbar__select" title="출처 필터">
+            <option value="">모든 출처</option>
+          </select>
+          <button id="graphFilterTension" class="graph-toolbar__btn" title="중요도 높은 올만 보기">긴장 3+</button>
+          <input id="graphSearch" class="graph-toolbar__search" type="text" placeholder="검색..." />
+        </div>
+        <canvas id="graphCanvas"></canvas>
+        <div class="graph-tooltip" id="graphTooltip"></div>
+        <div class="graph-empty" id="graphEmpty">
+          올을 잡고 엮어보세요.<br>뜨개판에 관계도가 나타납니다.
+        </div>
+      </div>
+    </aside>
+    <button type="button" class="panel-expand panel-expand--right" id="panelExpand" title="바구니 펼치기">&#9664;</button>
+
+  </div>
+
+  <!-- Context Menu: Note text -->
+  <div class="context-menu" id="noteContextMenu">
+    <div class="context-menu__item" data-action="catch-fiber" id="catchFiberMenuItem">
+      <span class="context-menu__icon">&#10070;</span>
+      올 잡기
+    </div>
+  </div>
+
+  <!-- Context Menu: Graph node -->
+  <div class="context-menu" id="graphContextMenu">
+    <div class="context-menu__item" data-action="graph-knot">
+      <span class="context-menu__icon">&#9670;</span>
+      매듭 짓기
+    </div>
+    <div class="context-menu__item" data-action="graph-detail">
+      <span class="context-menu__icon">&#8594;</span>
+      상세 보기
+    </div>
+  </div>
+
+  <!-- Dialog: New/Edit Bookshelf -->
+  <div class="dialog-overlay" id="bookshelfDialog">
+    <div class="dialog">
+      <h3 class="dialog__title" id="bookshelfDialogTitle">새 책장</h3>
+      <input class="dialog__input" id="bookshelfNameInput" type="text" placeholder="책장 이름">
+      <div class="dialog__actions">
+        <button class="dialog__btn dialog__btn--cancel" id="bookshelfDialogCancel">취소</button>
+        <button class="dialog__btn dialog__btn--save" id="bookshelfDialogSave">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Menu: Bookshelf -->
+  <div class="context-menu" id="bookshelfContextMenu">
+    <div class="context-menu__item" data-action="subfolder">
+      <span class="context-menu__icon">&#128194;</span>
+      하위 폴더 만들기
+    </div>
+    <div class="context-menu__item" data-action="rename">
+      <span class="context-menu__icon">&#9998;</span>
+      이름 변경
+    </div>
+    <div class="context-menu__separator"></div>
+    <div class="context-menu__item context-menu__item--danger" data-action="delete">
+      <span class="context-menu__icon">&#10005;</span>
+      삭제
+    </div>
+  </div>
+
+  <!-- Context Menu: Note move to bookshelf -->
+  <div class="context-menu" id="noteMoveContextMenu">
+    <div class="context-menu__item" data-action="move-header" style="pointer-events:none;color:var(--text-muted);font-size:var(--text-xs)">
+      책장으로 이동
+    </div>
+    <div class="context-menu__separator"></div>
+    <div id="noteMoveList"></div>
+    <div class="context-menu__separator"></div>
+    <div class="context-menu__item" data-action="uncategorize">
+      <span class="context-menu__icon">&#8722;</span>
+      미분류로 이동
+    </div>
+  </div>
+
+  <!-- Context Menu: Bulk note actions -->
+  <div class="context-menu" id="bulkContextMenu">
+    <div class="context-menu__item" id="bulkMenuLabel" style="pointer-events:none;color:var(--text-muted);font-size:var(--text-xs)">
+      0개 노트 선택됨
+    </div>
+    <div class="context-menu__separator"></div>
+    <div class="context-menu__item" data-action="bulk-move">
+      <span class="context-menu__icon">&#9654;</span>
+      책장으로 이동
+    </div>
+    <div class="context-menu__separator"></div>
+    <div class="context-menu__item context-menu__item--danger" data-action="bulk-delete">
+      <span class="context-menu__icon">&#10005;</span>
+      삭제
+    </div>
+  </div>
+
+  <!-- Dialog: Tension Selector (올 잡기) -->
+  <div class="dialog-overlay" id="tensionDialog">
+    <div class="dialog dialog--compact">
+      <h3 class="dialog__title">올 잡기</h3>
+      <p class="tension-preview" id="tensionPreview"></p>
+      <div class="tension-label">이 생각이 얼마나 강하게 걸렸나요?</div>
+      <div class="tension-dots" id="tensionDots">
+        <span class="tension-dot" data-t="1" title="살짝">1</span>
+        <span class="tension-dot" data-t="2" title="조금">2</span>
+        <span class="tension-dot is-active" data-t="3" title="보통">3</span>
+        <span class="tension-dot" data-t="4" title="꽤">4</span>
+        <span class="tension-dot" data-t="5" title="강렬!">5</span>
+      </div>
+      <div class="tone-label">이 생각의 결은?</div>
+      <div class="tone-selector" id="toneBtns">
+        <button type="button" class="tone-btn tone-btn--resonance is-active" data-tone="resonance">공명<br><span style="font-size:10px;opacity:0.7">아!!</span></button>
+        <button type="button" class="tone-btn tone-btn--friction" data-tone="friction">마찰<br><span style="font-size:10px;opacity:0.7">아닌데?!</span></button>
+        <button type="button" class="tone-btn tone-btn--question" data-tone="question">물음<br><span style="font-size:10px;opacity:0.7">흠...</span></button>
+      </div>
+      <div class="dialog__actions">
+        <button class="dialog__btn dialog__btn--cancel" id="tensionCancel">취소</button>
+        <button class="dialog__btn dialog__btn--save" id="tensionSave">잡기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog: Knot (매듭 짓기) -->
+  <div class="dialog-overlay" id="knotDialog">
+    <div class="dialog">
+      <h3 class="dialog__title">매듭 짓기</h3>
+      <p class="dialog__desc">이 연결들에서 떠오른 통찰을 기록하세요.</p>
+      <div class="knot-stitch-list" id="knotStitchList"></div>
+      <textarea class="knot-insight-input" id="knotInsight" rows="3" placeholder="어떤 통찰이 떠올랐나요?"></textarea>
+      <div class="dialog__actions">
+        <button class="dialog__btn dialog__btn--cancel" id="knotCancel">취소</button>
+        <button class="dialog__btn dialog__btn--save" id="knotSave">매듭 짓기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog: Custom (alert/confirm/prompt 대체) -->
+  <div class="dialog-overlay" id="customDialog">
+    <div class="dialog dialog--custom">
+      <h3 class="dialog__title" id="customDialogTitle"></h3>
+      <p class="dialog__message" id="customDialogMessage"></p>
+      <input class="dialog__input" id="customDialogInput" type="text" style="display:none">
+      <div class="dialog__actions" id="customDialogActions"></div>
+    </div>
+  </div>
+
+  <!-- Core -->
+  <script src="js/core/storage.js?v=2"></script>
+  <script src="js/core/fiber-api.js?v=2"></script>
+  <script src="js/core/note.js?v=2"></script>
+  <script src="js/core/bookshelf.js?v=2"></script>
+  <!-- UI -->
+  <script src="js/ui/dialog.js?v=1"></script>
+  <script src="js/ui/note-editor.js?v=2"></script>
+  <script src="js/ui/basket-panel.js?v=2"></script>
+  <script src="js/ui/graph-panel.js?v=1"></script>
+  <script src="js/ui/app.js?v=3"></script>
+</body>
+</html>

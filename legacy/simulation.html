@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>한 해의 뜨개질 — Knitting</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="../css/simulation.css">
+</head>
+<body>
+
+  <section class="ks-overview" id="overview">
+    <canvas class="ks-overview__canvas" id="overviewCanvas"></canvas>
+    <div class="ks-overview__content">
+      <span class="ks-overview__tag">Knitting</span>
+      <h1 class="ks-overview__title">한 해의 뜨개질</h1>
+      <p class="ks-overview__sub">스크롤하여 펼쳐보기</p>
+      <div class="ks-overview__arrow">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="ks-months" id="months"></section>
+
+  <section class="ks-threads" id="threads">
+    <div class="ks-threads__header">
+      <h2>실타래 풀어보기</h2>
+      <p>같은 실타래에 꿰어진 기록들을 따라가 보세요</p>
+    </div>
+    <div class="ks-threads__list" id="threadList"></div>
+  </section>
+
+  <section class="ks-closing" id="closing">
+    <canvas class="ks-closing__canvas" id="closingCanvas"></canvas>
+    <div class="ks-closing__content">
+      <div class="ks-closing__stats">
+        <div class="ks-closing__stat"><span class="ks-closing__num">50</span><span class="ks-closing__label">개의 기록</span></div>
+        <div class="ks-closing__stat"><span class="ks-closing__num">8</span><span class="ks-closing__label">개의 실타래</span></div>
+        <div class="ks-closing__stat"><span class="ks-closing__num">12</span><span class="ks-closing__label">개월</span></div>
+      </div>
+      <a href="../index.html" class="ks-closing__link">나의 뜨개질 시작하기</a>
+    </div>
+  </section>
+
+  <a href="guide.html" class="ks-back">&larr;</a>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/simulation.js"></script>
+</body>
+</html>
