@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#b8956a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Purl">
+  <title>Purl</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --bg-secondary: #f2f0ec;
+      --surface: #ffffff;
+      --surface-hover: #f7f6f3;
+      --border: #e8e5df;
+      --border-light: #f0eee9;
+      --text: #2c2c2c;
+      --text-secondary: #6b6b6b;
+      --text-muted: #a0a0a0;
+      --accent: #b8956a;
+      --accent-hover: #a6834f;
+      --accent-light: rgba(184, 149, 106, 0.1);
+      --accent-border: rgba(184, 149, 106, 0.3);
+      --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-serif: 'Gowun Batang', Georgia, serif;
+      --tone-positive: #5a8a6a;
+      --tone-critic: #c4644a;
+      --tone-hold: #7a7a7a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ====== 공통 ====== */
+    .view { display: none; min-height: 100dvh; flex-direction: column; }
+    .view.is-active { display: flex; }
+
+    .header {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+    .header__title {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .header__actions {
+      display: flex;
+      gap: 4px;
+    }
+    .header__action {
+      background: none;
+      border: none;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .header__action:active { background: var(--accent-light); color: var(--accent); }
+
+    .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ====== 1. 캡처 모드 ====== */
+    .capture { padding: 0 20px 24px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+    .capture__text {
+      width: 100%;
+      min-height: 100px;
+      padding: 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--surface);
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .capture__text:focus { border-color: var(--accent); }
+    .capture__text::placeholder { color: var(--text-muted); }
+
+    .capture__source {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .capture__source:focus { border-color: var(--accent); }
+    .capture__source::placeholder { color: var(--text-muted); }
+
+    /* 감도 슬라이더 */
+    .sensitivity-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .sensitivity-row .label { margin-bottom: 0; flex-shrink: 0; }
+    .sensitivity-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+    }
+    .sensitivity-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--surface);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+    .sensitivity-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* 방향성 버튼 */
+    .direction-row { display: flex; gap: 8px; }
+    .direction-btn {
+      flex: 1;
+      padding: 10px 0;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      font-family: var(--font);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .direction-btn.is-active {
+      font-weight: 600;
+    }
+    .direction-btn[data-tone="positive"].is-active {
+      border-color: var(--tone-positive);
+      background: rgba(90, 138, 106, 0.08);
+      color: var(--tone-positive);
+    }
+    .direction-btn[data-tone="critic"].is-active {
+      border-color: var(--tone-critic);
+      background: rgba(196, 100, 74, 0.08);
+      color: var(--tone-critic);
+    }
+    .direction-btn[data-tone="hold"].is-active {
+      border-color: var(--tone-hold);
+      background: rgba(122, 122, 122, 0.08);
+      color: var(--tone-hold);
+    }
+
+    /* 생각 적기 */
+    .capture__thought {
+      width: 100%;
+      min-height: 60px;
+      padding: 12px 16px;
+      border: 1.5px dashed var(--border);
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--surface);
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .capture__thought:focus { border-color: var(--accent); border-style: solid; }
+    .capture__thought::placeholder { color: var(--text-muted); }
+
+    /* 잡기 버튼 */
+    .capture__submit {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: auto;
+    }
+    .capture__submit:active { transform: scale(0.98); background: var(--accent-hover); }
+    .capture__submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ====== 2. 포커스뷰 (결과) ====== */
+    .focus { padding: 0 20px 24px; flex: 1; }
+
+    /* 중심 조각 카드 */
+    .focus__center {
+      padding: 18px;
+      background: var(--surface);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 6px;
+    }
+    .focus__center-text {
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    .focus__center-meta {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .focus__center-thought {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      line-height: 1.5;
+    }
+    .focus__center-source {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .focus__center-source a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* 연결 탐색 섹션 */
+    .focus__section {
+      margin-top: 20px;
+    }
+    .focus__section-header {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .focus__badge {
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    /* 연결 카드 */
+    .focus-card {
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .focus-card:active {
+      background: var(--surface-hover);
+      border-color: var(--accent-border);
+    }
+    .focus-card__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .focus-card__type {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .focus-card__type--fiber {
+      background: rgba(184, 149, 106, 0.12);
+      color: var(--accent);
+    }
+    .focus-card__type--thread {
+      background: rgba(90, 138, 106, 0.1);
+      color: var(--tone-positive);
+    }
+    .focus-card__type--stitch {
+      background: rgba(100, 120, 180, 0.1);
+      color: #6478b4;
+    }
+    .focus-card__type--fabric {
+      background: rgba(160, 100, 160, 0.1);
+      color: #a064a0;
+    }
+    .focus-card__type--link {
+      background: rgba(90, 138, 106, 0.1);
+      color: var(--tone-positive);
+    }
+    .focus-card__similarity {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+    .focus-card__text {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .focus-card__sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .focus-card__arrow {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .focus__loading {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .focus__empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* 포커스뷰 하단 액션 */
+    .focus__actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-light);
+    }
+    .focus__btn {
+      flex: 1;
+      padding: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .focus__btn:active { background: var(--surface-hover); }
+    .focus__btn--primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .focus__btn--primary:active { background: var(--accent-hover); }
+
+    /* 포커스 네비게이션 히스토리 */
+    .focus__breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 20px 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .focus__breadcrumb::-webkit-scrollbar { display: none; }
+    .focus__crumb {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      padding: 3px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .focus__crumb:active { background: var(--accent-light); color: var(--accent); }
+    .focus__crumb.is-current {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .focus__crumb-sep {
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      flex-shrink: 0;
+    }
+
+    /* (검색 모드 제거됨 — Phase 2 재설계) */
+
+    /* ====== 하단 탭 바 ====== */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 6px 0 env(safe-area-inset-bottom, 8px);
+      z-index: 30;
+    }
+    .tab-bar__item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 8px 0 4px;
+      background: none;
+      border: none;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: color 0.15s;
+      color: var(--text-muted);
+    }
+    .tab-bar__item.is-active { color: var(--accent); }
+    .tab-bar__icon { font-size: 1.2rem; line-height: 1; }
+    .tab-bar__label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.02em; }
+
+    /* 탭 바가 있으므로 뷰에 하단 패딩 */
+    .view { padding-bottom: 72px; }
+
+    /* ====== 만남 화면 ====== */
+    .encounter {
+      padding: 0 20px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .encounter__intro {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .encounter__card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+      animation: fadeIn 0.4s ease both;
+    }
+
+    .encounter__text {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .encounter__meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .encounter__tone {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .encounter__tone--positive { background: rgba(90, 138, 106, 0.1); color: var(--tone-positive); }
+    .encounter__tone--critic { background: rgba(196, 100, 74, 0.1); color: var(--tone-critic); }
+    .encounter__tone--hold { background: rgba(122, 122, 122, 0.1); color: var(--tone-hold); }
+
+    .encounter__sensitivity {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .encounter__sensitivity-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .encounter__sensitivity-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .encounter__sensitivity-value {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 24px;
+      text-align: right;
+    }
+
+    .encounter__thought {
+      padding: 12px 0;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    .encounter__source {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding-top: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .encounter__source a { color: var(--accent); text-decoration: none; }
+
+    .encounter__time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 12px;
+      text-align: right;
+    }
+
+    .encounter__next {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      font-family: var(--font);
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .encounter__next:active { background: var(--surface-hover); border-color: var(--accent-border); }
+
+    /* 만남 빈 상태 */
+    .encounter__empty {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .encounter__empty-icon {
+      font-size: 2rem;
+      color: var(--accent);
+      margin-bottom: 16px;
+      font-family: var(--font-serif);
+    }
+    .encounter__empty-text {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .encounter__empty-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .encounter__empty-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .encounter__empty-btn:active { background: var(--accent-hover); }
+
+    /* ====== 궤적 ====== */
+    .trail {
+      padding: 0 20px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .trail__empty {
+      text-align: center;
+      padding: 40px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .trail__empty-icon {
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      letter-spacing: 8px;
+    }
+    .trail__empty-text {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+    .trail__empty-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* 기간 토글 */
+    .trail__toggle {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+      margin-bottom: 16px;
+    }
+    .trail__toggle-btn {
+      background: none;
+      border: 1px solid var(--border);
+      font-family: var(--font);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 5px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .trail__toggle-btn.is-active {
+      background: var(--accent-light);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+
+    /* 날짜 그룹 */
+    .trail__scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .trail__month {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin: 16px 0 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .trail__month:first-child {
+      margin-top: 0;
+    }
+    .trail__day {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+    }
+    .trail__day-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      min-width: 32px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .trail__dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* 점 (dot) */
+    .trail__dot {
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      flex-shrink: 0;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .trail__dot:active {
+      transform: scale(1.3);
+      box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.2);
+    }
+    /* 크기 = 감도 (UI값 1~100) */
+    .trail__dot--s1 { width: 8px; height: 8px; }
+    .trail__dot--s2 { width: 12px; height: 12px; }
+    .trail__dot--s3 { width: 16px; height: 16px; }
+    .trail__dot--s4 { width: 20px; height: 20px; }
+    .trail__dot--s5 { width: 24px; height: 24px; }
+
+    /* 하단 요약 */
+    .trail__summary {
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+    .trail__summary-count {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .trail__summary-tones {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .trail__summary-tone {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .trail__summary-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ====== 주변부 (periphery) ====== */
+    .periphery {
+      margin-top: 4px;
+    }
+    .periphery__divider {
+      border: none;
+      border-top: 1.5px dashed var(--border);
+      margin: 0 0 14px 0;
+    }
+    .periphery__list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .periphery-card {
+      padding: 14px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      animation: fadeIn 0.3s ease both;
+    }
+    .periphery-card:active {
+      background: var(--surface-hover);
+      border-color: var(--accent-border);
+    }
+    .periphery-card__text {
+      font-family: var(--font-serif);
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .periphery-card__meta {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .periphery-card__tone {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 1px 8px;
+      border-radius: 10px;
+    }
+    .periphery-card__tone--positive { background: rgba(90, 138, 106, 0.1); color: var(--tone-positive); }
+    .periphery-card__tone--critic { background: rgba(196, 100, 74, 0.1); color: var(--tone-critic); }
+    .periphery-card__tone--hold { background: rgba(122, 122, 122, 0.1); color: var(--tone-hold); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .anim-fade { animation: fadeIn 0.3s ease both; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .anim-slide { animation: slideIn 0.25s ease both; }
+
+    /* ====== 연결하기 시트 (bottom sheet) ====== */
+    .link-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+    }
+    .link-sheet.is-open {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .link-sheet__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      animation: fadeIn 0.2s ease;
+    }
+    .link-sheet__panel {
+      position: relative;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px env(safe-area-inset-bottom, 20px);
+      max-height: 85dvh;
+      overflow-y: auto;
+      animation: sheetUp 0.3s ease;
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .link-sheet__handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+    .link-sheet__title {
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+    .link-sheet__members {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .link-member {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .link-member__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .link-member__text {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .link-member__remove {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .link-member__remove:active { color: var(--tone-critic); }
+
+    .link-sheet__add-btn {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      background: none;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: all 0.15s;
+    }
+    .link-sheet__add-btn:active { border-color: var(--accent); color: var(--accent); }
+
+    .link-sheet__search {
+      display: none;
+      margin-bottom: 16px;
+    }
+    .link-sheet__search.is-open { display: block; }
+    .link-sheet__search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .link-sheet__search-input:focus { border-color: var(--accent); }
+    .link-sheet__search-results {
+      margin-top: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .link-search-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .link-search-item:active { background: var(--accent-light); }
+    .link-search-item__dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .link-search-item__text {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .link-search-item__time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .link-search-item.is-selected {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .link-sheet__why {
+      width: 100%;
+      min-height: 60px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      color: var(--text);
+      background: var(--surface);
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 16px;
+    }
+    .link-sheet__why:focus { border-color: var(--accent); }
+    .link-sheet__why::placeholder { color: var(--text-muted); }
+
+    .link-sheet__submit {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .link-sheet__submit:active { background: var(--accent-hover); }
+    .link-sheet__submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ====== 궤적 멀티선택 ====== */
+    .trail__dot.is-selected {
+      box-shadow: 0 0 0 3px var(--accent), 0 0 0 5px rgba(184, 149, 106, 0.3);
+    }
+    .trail__select-bar {
+      position: fixed;
+      bottom: 72px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      z-index: 20;
+      animation: sheetUp 0.2s ease;
+      align-items: center;
+    }
+    .trail__select-count {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .trail__select-cancel {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-family: var(--font);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .trail__select-link {
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-family: var(--font);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+    }
+    .trail__select-link:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* 만남 카드 연결하기 버튼 */
+    .encounter__link-btn {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .encounter__link-btn:active { background: var(--surface-hover); border-color: var(--accent-border); color: var(--accent); }
+
+    /* ====== 인증 오버레이 ====== */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .auth-overlay.is-hidden { display: none; }
+    .auth-card {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .auth-title {
+      font-family: var(--font-serif);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-align: center;
+      margin-bottom: 2px;
+    }
+    .auth-subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .auth-tab.is-active {
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+      background: var(--accent-light);
+    }
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: var(--font);
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .auth-input:focus { border-color: var(--accent); }
+    .auth-error {
+      font-size: 0.85rem;
+      color: var(--tone-critic);
+      text-align: center;
+      min-height: 20px;
+    }
+    .auth-submit {
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background 0.15s;
+    }
+    .auth-submit:active { background: var(--accent-hover); }
+    .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <!-- ====== 로그인/회원가입 오버레이 ====== -->
+  <div class="auth-overlay is-hidden" id="authOverlay">
+    <div class="auth-card">
+      <h1 class="auth-title">Purl</h1>
+      <p class="auth-subtitle">A tool for rediscovering your thoughts</p>
+      <div class="auth-tabs">
+        <button class="auth-tab is-active" id="authTabLogin">Sign in</button>
+        <button class="auth-tab" id="authTabRegister">Sign up</button>
+      </div>
+      <div id="authError" class="auth-error"></div>
+      <input class="auth-input" id="authEmail" type="email" placeholder="Email" autocomplete="email">
+      <input class="auth-input" id="authPassword" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
+      <button class="auth-submit" id="authSubmit">Sign in</button>
+    </div>
+  </div>
+
+  <!-- ====== 0. 만남 화면 (홈) ====== -->
+  <div class="view" id="encounterView">
+    <header class="header">
+      <span class="header__title">Purl</span>
+      <button class="header__action" id="logoutBtn" style="font-size:0.8rem;color:var(--text-muted)">Sign out</button>
+    </header>
+    <main class="encounter" id="encounterContent">
+      <!-- 동적으로 채워짐 -->
+    </main>
+  </div>
+
+  <!-- ====== 1. 캡처 화면 ====== -->
+  <div class="view" id="captureView">
+    <header class="header">
+      <span class="header__title">Catch</span>
+    </header>
+    <main class="capture">
+      <textarea class="capture__text" id="textInput" placeholder="What's on your mind?"></textarea>
+      <input class="capture__source" id="sourceInput" type="text" placeholder="Source (optional)">
+
+      <div>
+        <div class="label">Tone</div>
+        <div class="direction-row">
+          <button class="direction-btn is-active" data-tone="positive">Positive</button>
+          <button class="direction-btn" data-tone="critic">Critic</button>
+          <button class="direction-btn" data-tone="hold">Hold</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="label">Sensitivity</div>
+        <div class="sensitivity-row">
+          <input class="sensitivity-slider" id="sensitivitySlider" type="range" min="1" max="100" value="50">
+          <span class="sensitivity-value" id="sensitivityValue">50</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="label">Thought (optional)</div>
+        <textarea class="capture__thought" id="thoughtInput" placeholder="Any thoughts about this..."></textarea>
+      </div>
+
+      <!-- 주변부 영역 -->
+      <div class="periphery" id="peripherySection" style="display:none">
+        <hr class="periphery__divider">
+        <div class="periphery__list" id="peripheryList"></div>
+      </div>
+
+      <button class="capture__submit" id="submitBtn" disabled>Catch</button>
+    </main>
+  </div>
+
+  <!-- ====== 2. 포커스뷰 ====== -->
+  <div class="view" id="focusView">
+    <header class="header">
+      <button class="header__action" id="focusBackBtn">&larr; Back</button>
+      <div class="header__actions">
+        <button class="header__action" id="focusExplorerBtn">All pieces</button>
+      </div>
+    </header>
+
+    <!-- 탐색 히스토리 -->
+    <div class="focus__breadcrumb" id="focusBreadcrumb"></div>
+
+    <main class="focus" id="focusContent">
+      <!-- 동적으로 채워짐 -->
+    </main>
+  </div>
+
+  <!-- ====== 3. 궤적 화면 ====== -->
+  <div class="view" id="trailView">
+    <header class="header">
+      <span class="header__title">Trail</span>
+      <div class="trail__toggle" id="trailToggle">
+        <button class="trail__toggle-btn is-active" data-range="month">This month</button>
+        <button class="trail__toggle-btn" data-range="all">All</button>
+      </div>
+    </header>
+    <main class="trail" id="trailContent">
+      <!-- 동적으로 채워짐 -->
+    </main>
+  </div>
+
+  <!-- ====== 하단 탭 바 ====== -->
+  <nav class="tab-bar" id="tabBar">
+    <button class="tab-bar__item is-active" data-tab="encounter">
+      <span class="tab-bar__icon">○</span>
+      <span class="tab-bar__label">Encounter</span>
+    </button>
+    <button class="tab-bar__item" data-tab="capture">
+      <span class="tab-bar__icon">+</span>
+      <span class="tab-bar__label">Catch</span>
+    </button>
+    <button class="tab-bar__item" data-tab="trail">
+      <span class="tab-bar__icon">∿</span>
+      <span class="tab-bar__label">Trail</span>
+    </button>
+  </nav>
+
+  <!-- ====== 연결하기 시트 ====== -->
+  <div class="link-sheet" id="linkSheet">
+    <div class="link-sheet__backdrop" id="linkSheetBackdrop"></div>
+    <div class="link-sheet__panel">
+      <div class="link-sheet__handle"></div>
+      <div class="link-sheet__title">Link pieces</div>
+      <div class="link-sheet__members" id="linkMembers"></div>
+      <button class="link-sheet__add-btn" id="linkAddBtn">+ Add piece</button>
+      <div class="link-sheet__search" id="linkSearch">
+        <input class="link-sheet__search-input" id="linkSearchInput" type="text" placeholder="Search pieces...">
+        <div class="link-sheet__search-results" id="linkSearchResults"></div>
+      </div>
+      <div class="label">Why do these feel connected?</div>
+      <textarea class="link-sheet__why" id="linkWhyInput" placeholder="Reason (optional)"></textarea>
+      <button class="link-sheet__submit" id="linkSubmitBtn" disabled>Link</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      var API = '/api';
+
+      // ─── 인증 ───
+      var authToken = localStorage.getItem('purl_token');
+
+      function apiFetch(url, opts) {
+        opts = opts || {};
+        opts.headers = opts.headers || {};
+        if (authToken) {
+          opts.headers['Authorization'] = 'Bearer ' + authToken;
+        }
+        return fetch(url, opts).then(function(res) {
+          if (res.status === 401) {
+            authToken = null;
+            localStorage.removeItem('purl_token');
+            showAuthOverlay();
+          }
+          return res;
+        });
+      }
+
+      function showAuthOverlay() {
+        document.getElementById('authOverlay').classList.remove('is-hidden');
+      }
+
+      function hideAuthOverlay() {
+        document.getElementById('authOverlay').classList.add('is-hidden');
+      }
+
+      // 앱 초기화 (로그인 후 호출)
+      var appInitialized = false;
+      function initApp() {
+        if (appInitialized) return;
+        appInitialized = true;
+        showView(encounterView);
+        loadEncounter();
+      }
+
+      // 인증 UI 연결
+      var authTabLogin = document.getElementById('authTabLogin');
+      var authTabRegister = document.getElementById('authTabRegister');
+      var authSubmit = document.getElementById('authSubmit');
+      var authEmail = document.getElementById('authEmail');
+      var authPassword = document.getElementById('authPassword');
+      var authError = document.getElementById('authError');
+      var authMode = 'login';
+
+      authTabLogin.addEventListener('click', function() {
+        authMode = 'login';
+        authTabLogin.classList.add('is-active');
+        authTabRegister.classList.remove('is-active');
+        authSubmit.textContent = 'Sign in';
+        authError.textContent = '';
+      });
+
+      authTabRegister.addEventListener('click', function() {
+        authMode = 'register';
+        authTabRegister.classList.add('is-active');
+        authTabLogin.classList.remove('is-active');
+        authSubmit.textContent = 'Get started';
+        authError.textContent = '';
+      });
+
+      authSubmit.addEventListener('click', async function() {
+        var email = authEmail.value.trim();
+        var password = authPassword.value;
+        if (!email || !password) {
+          authError.textContent = 'Please enter your email and password';
+          return;
+        }
+        authSubmit.disabled = true;
+        authError.textContent = '';
+        try {
+          var endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+          var res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password })
+          });
+          var data = await res.json();
+          if (!res.ok) {
+            authError.textContent = data.error || 'Something went wrong';
+            return;
+          }
+          authToken = data.token;
+          localStorage.setItem('purl_token', authToken);
+          hideAuthOverlay();
+          initApp();
+        } catch (e) {
+          authError.textContent = 'Cannot connect to server';
+        } finally {
+          authSubmit.disabled = false;
+        }
+      });
+
+      authPassword.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') authSubmit.click();
+      });
+
+      // 로그아웃
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        if (!confirm('Sign out?')) return;
+        authToken = null;
+        localStorage.removeItem('purl_token');
+        appInitialized = false;
+        showAuthOverlay();
+      });
+
+      var selectedTone = 'positive';
+      var currentEncounterFiberId = null; // 현재 만남 중인 조각 ID
+
+      // 포커스뷰 탐색 히스토리
+      var focusHistory = [];
+
+      var TONE_LABEL = { positive: 'Positive', critic: 'Critic', hold: 'Hold' };
+      var TONE_COLOR = { positive: '#5a8a6a', critic: '#c4644a', hold: '#7a7a7a' };
+
+      // --- DOM ---
+      var encounterView = document.getElementById('encounterView');
+      var captureView = document.getElementById('captureView');
+      var focusView = document.getElementById('focusView');
+      var trailView = document.getElementById('trailView');
+      var encounterContent = document.getElementById('encounterContent');
+      var tabBar = document.getElementById('tabBar');
+
+      var textInput = document.getElementById('textInput');
+      var sourceInput = document.getElementById('sourceInput');
+      var sensitivitySlider = document.getElementById('sensitivitySlider');
+      var sensitivityValue = document.getElementById('sensitivityValue');
+      var thoughtInput = document.getElementById('thoughtInput');
+      var submitBtn = document.getElementById('submitBtn');
+
+      var focusContent = document.getElementById('focusContent');
+      var focusBreadcrumb = document.getElementById('focusBreadcrumb');
+
+      var allViews = [encounterView, captureView, focusView, trailView];
+
+      // --- 화면 전환 ---
+      function showView(viewEl) {
+        allViews.forEach(function(v) { v.classList.remove('is-active'); });
+        viewEl.classList.add('is-active');
+
+        // 궤적 선택 모드 해제
+        if (viewEl !== trailView && typeof exitTrailSelect === 'function') {
+          try { exitTrailSelect(); } catch(e) {}
+        }
+
+        // 탭 바 표시/숨기기: 포커스뷰에서는 숨김
+        tabBar.style.display = (viewEl === focusView) ? 'none' : '';
+
+        // 탭 바 활성 상태 업데이트
+        var tabMap = {};
+        tabMap[encounterView.id] = 'encounter';
+        tabMap[captureView.id] = 'capture';
+        tabMap[trailView.id] = 'trail';
+        var activeTab = tabMap[viewEl.id];
+        if (activeTab) {
+          tabBar.querySelectorAll('.tab-bar__item').forEach(function(btn) {
+            btn.classList.toggle('is-active', btn.dataset.tab === activeTab);
+          });
+        }
+      }
+
+      // --- 탭 바 클릭 ---
+      tabBar.addEventListener('click', function(e) {
+        var btn = e.target.closest('.tab-bar__item');
+        if (!btn) return;
+        var tab = btn.dataset.tab;
+        if (tab === 'encounter') { showView(encounterView); }
+        else if (tab === 'capture') { showView(captureView); textInput.focus(); }
+        else if (tab === 'trail') { showView(trailView); loadTrail(); }
+      });
+
+      // --- 진입 분기 ---
+      var params = new URLSearchParams(location.search);
+      var sharedTitle = params.get('title') || '';
+      var sharedText = params.get('text') || '';
+      var sharedUrl = params.get('url') || '';
+      var isFromShare = !!(sharedText || sharedTitle || sharedUrl);
+
+      if (!authToken) {
+        showAuthOverlay();
+      } else if (isFromShare) {
+        appInitialized = true;
+        var mainText = '';
+        var source = '';
+
+        if (sharedText && sharedUrl) {
+          mainText = sharedText.replace(sharedUrl, '').trim();
+          if (!mainText) mainText = sharedTitle || sharedUrl;
+          source = sharedUrl;
+        } else if (sharedText) {
+          var urlMatch = sharedText.match(/https?:\/\/\S+/);
+          if (urlMatch) {
+            source = urlMatch[0];
+            mainText = sharedText.replace(urlMatch[0], '').trim();
+            if (!mainText) mainText = sharedTitle || source;
+          } else {
+            mainText = sharedText;
+          }
+        } else if (sharedUrl) {
+          mainText = sharedTitle || sharedUrl;
+          source = sharedUrl;
+        } else {
+          mainText = sharedTitle;
+        }
+
+        textInput.value = mainText;
+        sourceInput.value = source;
+        if (history.replaceState) history.replaceState(null, '', location.pathname);
+        showView(captureView);
+        textInput.focus();
+      } else {
+        // 기본 진입: 만남 탭
+        initApp();
+      }
+
+      // ====== 만남 (Encounter) ======
+
+      async function loadEncounter() {
+        encounterContent.innerHTML = '<div class="encounter__empty"><div class="encounter__empty-text">Loading...</div></div>';
+
+        try {
+          var res = await apiFetch(API + '/encounter');
+          if (!res.ok) throw new Error('encounter fetch failed');
+          var data = await res.json();
+
+          if (!data.fiber) {
+            renderEncounterEmpty();
+            return;
+          }
+
+          renderEncounterCard(data.fiber);
+        } catch (err) {
+          console.error('만남 로드 실패:', err);
+          renderEncounterEmpty();
+        }
+      }
+
+      function renderEncounterEmpty() {
+        currentEncounterFiberId = null;
+        encounterContent.innerHTML =
+          '<div class="encounter__empty">' +
+            '<div class="encounter__empty-icon">Purl</div>' +
+            '<div class="encounter__empty-text">No pieces yet</div>' +
+            '<div class="encounter__empty-sub">Catch your first piece in the Catch tab</div>' +
+            '<button class="encounter__empty-btn" id="encounterToCapture">Catch a piece</button>' +
+          '</div>';
+
+        var btn = document.getElementById('encounterToCapture');
+        if (btn) btn.addEventListener('click', function() {
+          showView(captureView);
+          textInput.focus();
+        });
+      }
+
+      function renderEncounterCard(fiber) {
+        currentEncounterFiberId = fiber.id;
+        var sensitivity = (fiber.tension || 3) * 20;
+        var tone = fiber.tone || 'positive';
+        var toneLabel = TONE_LABEL[tone] || 'Positive';
+        var toneColor = TONE_COLOR[tone] || TONE_COLOR.positive;
+        var timeAgo = relativeTime(fiber.caught_at || fiber.created_at);
+
+        var html = '';
+        html += '<div class="encounter__intro">' + escHtml(timeAgo) + ', you caught this</div>';
+        html += '<div class="encounter__card">';
+
+        // 텍스트
+        html += '<div class="encounter__text">' + escHtml(fiber.text) + '</div>';
+
+        // 메타: 방향성 + 감도 바
+        html += '<div class="encounter__meta">';
+        html += '<span class="encounter__tone encounter__tone--' + tone + '">' + toneLabel + '</span>';
+        html += '<div class="encounter__sensitivity">';
+        html += '<div class="encounter__sensitivity-bar">';
+        html += '<div class="encounter__sensitivity-fill" style="width:' + sensitivity + '%;background:' + toneColor + '"></div>';
+        html += '</div>';
+        html += '<span class="encounter__sensitivity-value">' + sensitivity + '</span>';
+        html += '</div>';
+        html += '</div>';
+
+        // 생각
+        if (fiber.thought) {
+          html += '<div class="encounter__thought">' + escHtml(fiber.thought) + '</div>';
+        }
+
+        // 출처
+        if (fiber.source) {
+          var isUrl = fiber.source.startsWith('http');
+          html += '<div class="encounter__source">';
+          html += isUrl
+            ? '<a href="' + escHtml(fiber.source) + '" target="_blank">' + escHtml(truncate(fiber.source, 50)) + '</a>'
+            : escHtml(fiber.source);
+          html += '</div>';
+        }
+
+        // 시간
+        html += '<div class="encounter__time">' + escHtml(timeAgo) + '</div>';
+
+        html += '</div>'; // .encounter__card
+
+        // 다음 만남 + 연결하기 버튼
+        html += '<button class="encounter__next" id="nextEncounterBtn">Next encounter</button>';
+        html += '<button class="encounter__link-btn" id="encounterLinkBtn">Link this</button>';
+
+        encounterContent.innerHTML = html;
+
+        // 연결하기 버튼 이벤트
+        document.getElementById('encounterLinkBtn').addEventListener('click', function() {
+          if (currentEncounterFiberId) openLinkSheet([currentEncounterFiberId]);
+        });
+
+        // 다음 만남 버튼 이벤트
+        document.getElementById('nextEncounterBtn').addEventListener('click', async function() {
+          var btn = this;
+          btn.disabled = true;
+          btn.textContent = 'Loading...';
+
+          try {
+            // 현재 만남 기록
+            if (currentEncounterFiberId) {
+              await apiFetch(API + '/encounter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fiber_id: currentEncounterFiberId })
+              });
+            }
+            // 새 만남 로드
+            await loadEncounter();
+          } catch (err) {
+            console.error('next encounter failed:', err);
+            btn.textContent = 'Next encounter';
+            btn.disabled = false;
+          }
+        });
+      }
+
+      // --- 상대 시간 ---
+      function relativeTime(ts) {
+        if (!ts) return '';
+        var now = Date.now();
+        var diff = now - ts;
+        var sec = Math.floor(diff / 1000);
+        var min = Math.floor(sec / 60);
+        var hour = Math.floor(min / 60);
+        var day = Math.floor(hour / 24);
+        var week = Math.floor(day / 7);
+        var month = Math.floor(day / 30);
+        var year = Math.floor(day / 365);
+
+        if (sec < 60) return 'just now';
+        if (min < 60) return min + 'm ago';
+        if (hour < 24) return hour + 'h ago';
+        if (day < 7) return day + 'd ago';
+        if (week < 5) return week + 'w ago';
+        if (month < 12) return month + 'mo ago';
+        return year + 'y ago';
+      }
+
+      // --- 감도 슬라이더 ---
+      sensitivitySlider.addEventListener('input', function() {
+        sensitivityValue.textContent = sensitivitySlider.value;
+      });
+
+      // --- 방향성 버튼 ---
+      document.querySelectorAll('.direction-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          document.querySelector('.direction-btn.is-active').classList.remove('is-active');
+          btn.classList.add('is-active');
+          selectedTone = btn.dataset.tone;
+        });
+      });
+
+      // --- 주변부 ---
+      var peripherySection = document.getElementById('peripherySection');
+      var peripheryList = document.getElementById('peripheryList');
+      var peripheryTimer = null;
+
+      function fetchPeriphery() {
+        var text = textInput.value.trim();
+        if (!text || text.length < 2) {
+          peripherySection.style.display = 'none';
+          peripheryList.innerHTML = '';
+          return;
+        }
+
+        var params = new URLSearchParams();
+        params.set('text', text);
+        if (selectedTone) params.set('tone', selectedTone);
+        var src = sourceInput.value.trim();
+        if (src) params.set('source', src);
+
+        apiFetch(API + '/periphery?' + params.toString())
+          .then(function(res) { return res.json(); })
+          .then(function(fibers) {
+            if (!fibers || !fibers.length) {
+              peripherySection.style.display = 'none';
+              peripheryList.innerHTML = '';
+              return;
+            }
+            renderPeriphery(fibers);
+          })
+          .catch(function() {
+            peripherySection.style.display = 'none';
+          });
+      }
+
+      function renderPeriphery(fibers) {
+        peripherySection.style.display = '';
+        var html = '';
+        fibers.forEach(function(fiber) {
+          var tone = fiber.tone || 'positive';
+          var toneLabel = TONE_LABEL[tone] || 'Positive';
+          var sensitivity = (fiber.tension || 3) * 20;
+          var timeAgo = relativeTime(fiber.caught_at || fiber.created_at);
+
+          html += '<div class="periphery-card" data-fiber-id="' + fiber.id + '">';
+          html += '<div class="periphery-card__text">' + escHtml(fiber.text) + '</div>';
+          html += '<div class="periphery-card__meta">';
+          html += '<span class="periphery-card__tone periphery-card__tone--' + tone + '">' + toneLabel + '</span>';
+          html += '<span>Sensitivity ' + sensitivity + '</span>';
+          html += '<span>' + escHtml(timeAgo) + '</span>';
+          html += '</div>';
+          html += '</div>';
+        });
+        peripheryList.innerHTML = html;
+
+        // 카드 탭 → 포커스뷰로 이동
+        peripheryList.querySelectorAll('.periphery-card').forEach(function(card) {
+          card.addEventListener('click', function() {
+            var fiberId = card.dataset.fiberId;
+            var label = truncate(card.querySelector('.periphery-card__text').textContent, 20);
+            focusHistory = [];
+            openFocus('fiber', fiberId, label);
+          });
+        });
+      }
+
+      function schedulePeriphery() {
+        if (peripheryTimer) clearTimeout(peripheryTimer);
+        peripheryTimer = setTimeout(fetchPeriphery, 200);
+      }
+
+      textInput.addEventListener('input', schedulePeriphery);
+      sourceInput.addEventListener('input', schedulePeriphery);
+
+      // --- 입력 유효성 ---
+      function updateSubmit() {
+        submitBtn.disabled = !textInput.value.trim();
+      }
+      textInput.addEventListener('input', updateSubmit);
+      updateSubmit();
+
+      // --- 잡기 ---
+      submitBtn.addEventListener('click', async function() {
+        var text = textInput.value.trim();
+        if (!text) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Catching...';
+
+        try {
+          var body = {
+            text: text,
+            tone: selectedTone,
+            tension: Math.ceil(parseInt(sensitivitySlider.value) / 20) || 1
+          };
+          var source = sourceInput.value.trim();
+          if (source) body.source = source;
+
+          var thought = thoughtInput.value.trim();
+          if (thought) body.thought = thought;
+
+          var res = await apiFetch(API + '/fibers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          if (!res.ok) throw new Error('save failed');
+          var fiber = await res.json();
+
+          // thought가 POST에서 안 들어갔으면 PATCH
+          if (thought && !fiber.thought) {
+            await apiFetch(API + '/fibers/' + fiber.id, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ thought: thought })
+            });
+            fiber.thought = thought;
+          }
+
+          // 캡처 폼 초기화
+          textInput.value = '';
+          textInput.style.height = '';
+          sourceInput.value = '';
+          thoughtInput.value = '';
+          thoughtInput.style.height = '';
+          sensitivitySlider.value = 50;
+          sensitivityValue.textContent = '50';
+          selectedTone = 'positive';
+          document.querySelector('.direction-btn.is-active').classList.remove('is-active');
+          document.querySelector('.direction-btn[data-tone="positive"]').classList.add('is-active');
+          submitBtn.textContent = 'Catch';
+          updateSubmit();
+          // 주변부 초기화
+          peripherySection.style.display = 'none';
+          peripheryList.innerHTML = '';
+
+          // 포커스뷰로 이동
+          focusHistory = [];
+          openFocus('fiber', fiber.id, truncate(fiber.text, 20));
+
+        } catch (err) {
+          console.error(err);
+          submitBtn.textContent = 'Retry';
+          submitBtn.disabled = false;
+          setTimeout(function() { submitBtn.textContent = 'Catch'; }, 2000);
+        }
+      });
+
+      // ====== 포커스뷰 ======
+
+      function openFocus(type, id, label) {
+        focusHistory.push({ type: type, id: id, label: label });
+        renderBreadcrumb();
+        loadFocusContent(type, id);
+        showView(focusView);
+      }
+
+      function navigateFocus(type, id, label) {
+        var existIdx = focusHistory.findIndex(function(h) { return h.type === type && h.id === id; });
+        if (existIdx >= 0) {
+          focusHistory = focusHistory.slice(0, existIdx + 1);
+        } else {
+          focusHistory.push({ type: type, id: id, label: label });
+        }
+        renderBreadcrumb();
+        loadFocusContent(type, id);
+      }
+
+      function renderBreadcrumb() {
+        if (focusHistory.length <= 1) {
+          focusBreadcrumb.innerHTML = '';
+          return;
+        }
+        focusBreadcrumb.innerHTML = focusHistory.map(function(h, i) {
+          var isLast = i === focusHistory.length - 1;
+          var cls = 'focus__crumb' + (isLast ? ' is-current' : '');
+          var sep = i < focusHistory.length - 1 ? '<span class="focus__crumb-sep">&rsaquo;</span>' : '';
+          return '<span class="' + cls + '" data-idx="' + i + '">' + escHtml(h.label) + '</span>' + sep;
+        }).join('');
+
+        focusBreadcrumb.querySelectorAll('.focus__crumb').forEach(function(el) {
+          el.addEventListener('click', function() {
+            var idx = parseInt(el.dataset.idx);
+            var h = focusHistory[idx];
+            focusHistory = focusHistory.slice(0, idx + 1);
+            renderBreadcrumb();
+            loadFocusContent(h.type, h.id);
+          });
+        });
+
+        focusBreadcrumb.scrollLeft = focusBreadcrumb.scrollWidth;
+      }
+
+      async function loadFocusContent(type, id) {
+        focusContent.innerHTML = '<div class="focus__loading">Loading...</div>';
+
+        try {
+          if (type === 'fiber') {
+            await renderFiberFocus(id);
+          } else if (type === 'link') {
+            await renderLinkFocus(id);
+          }
+        } catch (err) {
+          console.error('포커스 로드 실패:', err);
+          focusContent.innerHTML = '<div class="focus__empty">Could not load.</div>';
+        }
+      }
+
+      // --- 조각(fiber) 포커스 ---
+      async function renderFiberFocus(id) {
+        var res = await apiFetch(API + '/fibers/' + id);
+        if (!res.ok) throw new Error('not found');
+        var fiber = await res.json();
+
+        var html = '';
+        var sensitivity = (fiber.tension || 3) * 20;
+        var tone = fiber.tone || 'positive';
+
+        // 중심 카드
+        html += '<div class="focus__center anim-fade">';
+        html += '<div class="focus__center-text">' + escHtml(fiber.text) + '</div>';
+        html += '<div class="focus__center-meta">';
+        html += '<span>Sensitivity ' + sensitivity + '</span>';
+        html += '<span>' + (TONE_LABEL[tone] || 'Positive') + '</span>';
+        html += '</div>';
+        if (fiber.thought) {
+          html += '<div class="focus__center-thought">' + escHtml(fiber.thought) + '</div>';
+        }
+        if (fiber.source) {
+          var isUrl = fiber.source.startsWith('http');
+          html += '<div class="focus__center-source">';
+          html += isUrl
+            ? '<a href="' + escHtml(fiber.source) + '" target="_blank">' + escHtml(truncate(fiber.source, 50)) + '</a>'
+            : escHtml(fiber.source);
+          html += '</div>';
+        }
+        html += '</div>';
+
+        // 연결(link) 로드
+        var linksRes = await apiFetch(API + '/fibers/' + id + '/links');
+        var links = linksRes.ok ? await linksRes.json() : [];
+
+        if (links.length > 0) {
+          html += '<div class="focus__section">';
+          html += '<div class="focus__section-header">Links <span class="focus__badge">' + links.length + '</span></div>';
+          links.forEach(function(lnk, i) {
+            var members = (lnk.members || []).filter(function(m) { return m.id !== id; });
+            var subText = members.map(function(m) { return truncate(m.text || '', 30); }).join(' / ');
+            html += renderFocusCard('link', lnk.id, lnk.why || '(no reason)', subText, null, i);
+          });
+          html += '</div>';
+        }
+
+        if (links.length === 0) {
+          html += '<div class="focus__empty">No links yet.<br>Keep catching — connections will emerge.</div>';
+        }
+
+        // 하단 액션
+        html += '<div class="focus__actions">';
+        html += '<button class="focus__btn" id="focusDoneBtn">Close</button>';
+        html += '<button class="focus__btn" id="focusLinkBtn">Link</button>';
+        html += '<button class="focus__btn focus__btn--primary" id="focusNewBtn">Catch another</button>';
+        html += '</div>';
+
+        focusContent.innerHTML = html;
+        bindFocusCardEvents();
+        bindFocusActions(id);
+      }
+
+      // --- 연결(link) 포커스 ---
+      async function renderLinkFocus(id) {
+        var res = await apiFetch(API + '/links/' + id);
+        if (!res.ok) throw new Error('not found');
+        var link = await res.json();
+
+        var html = '';
+        html += '<div class="focus__center anim-fade">';
+        html += '<div class="focus__center-meta"><span>link</span></div>';
+        html += '<div class="focus__center-text" style="margin-top:8px">' + escHtml(link.why || '(no reason)') + '</div>';
+        html += '</div>';
+
+        var members = link.members || [];
+        if (members.length > 0) {
+          html += '<div class="focus__section">';
+          html += '<div class="focus__section-header">Linked pieces <span class="focus__badge">' + members.length + '</span></div>';
+          members.forEach(function(m, i) {
+            html += renderFocusCard('fiber', m.id, m.text || '(empty)', null, null, i);
+          });
+          html += '</div>';
+        }
+
+        html += '<div class="focus__actions">';
+        html += '<button class="focus__btn" id="focusDoneBtn">Close</button>';
+        html += '<button class="focus__btn focus__btn--primary" id="focusNewBtn">Catch another</button>';
+        html += '</div>';
+
+        focusContent.innerHTML = html;
+        bindFocusCardEvents();
+        bindFocusActions();
+      }
+
+      // --- 포커스 카드 렌더링 ---
+      function renderFocusCard(type, id, text, sub, similarity, idx) {
+        var delay = 'animation-delay:' + ((idx || 0) * 0.06) + 's';
+        var typeLabel = type === 'fiber' ? 'piece' : type === 'link' ? 'link' : type;
+        var typeClass = 'focus-card__type--' + type;
+        var simHtml = similarity ? '<span class="focus-card__similarity">' + similarity + '</span>' : '';
+        var subHtml = sub ? '<div class="focus-card__sub">' + escHtml(sub) + '</div>' : '';
+
+        return '<div class="focus-card anim-fade" style="' + delay + '" data-type="' + type + '" data-id="' + id + '">' +
+          '<div class="focus-card__header">' +
+            '<span class="focus-card__type ' + typeClass + '">' + typeLabel + '</span>' +
+            simHtml +
+          '</div>' +
+          '<div class="focus-card__text">' + escHtml(text) + '</div>' +
+          subHtml +
+          '<span class="focus-card__arrow">&rsaquo;</span>' +
+        '</div>';
+      }
+
+      function bindFocusCardEvents() {
+        focusContent.querySelectorAll('.focus-card').forEach(function(card) {
+          card.addEventListener('click', function() {
+            var type = card.dataset.type;
+            var id = card.dataset.id;
+            var label = truncate(card.querySelector('.focus-card__text').textContent, 20);
+            navigateFocus(type, id, label);
+          });
+        });
+      }
+
+      function bindFocusActions(currentFiberId) {
+        var doneBtn = document.getElementById('focusDoneBtn');
+        var newBtn = document.getElementById('focusNewBtn');
+        var linkBtn = document.getElementById('focusLinkBtn');
+        if (doneBtn) doneBtn.addEventListener('click', function() { showView(encounterView); });
+        if (newBtn) newBtn.addEventListener('click', function() { showView(captureView); textInput.focus(); });
+        if (linkBtn && currentFiberId) linkBtn.addEventListener('click', function() { openLinkSheet([currentFiberId]); });
+      }
+
+      // --- 네비게이션 ---
+      document.getElementById('focusBackBtn').addEventListener('click', function() {
+        if (focusHistory.length > 1) {
+          focusHistory.pop();
+          var prev = focusHistory[focusHistory.length - 1];
+          renderBreadcrumb();
+          loadFocusContent(prev.type, prev.id);
+        } else {
+          showView(encounterView);
+        }
+      });
+      document.getElementById('focusExplorerBtn').addEventListener('click', function() {
+        location.href = '/explorer.html';
+      });
+
+      // ====== 궤적 (Trail) ======
+
+      var trailContent = document.getElementById('trailContent');
+      var trailToggle = document.getElementById('trailToggle');
+      var trailRange = 'month'; // 'month' | 'all'
+      var trailLoaded = false;
+
+      // 기간 토글
+      trailToggle.addEventListener('click', function(e) {
+        var btn = e.target.closest('.trail__toggle-btn');
+        if (!btn) return;
+        var range = btn.dataset.range;
+        if (range === trailRange) return;
+        trailRange = range;
+        trailToggle.querySelectorAll('.trail__toggle-btn').forEach(function(b) {
+          b.classList.toggle('is-active', b.dataset.range === range);
+        });
+        loadTrail();
+      });
+
+      function getMonthRange() {
+        var now = new Date();
+        var start = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { from: start.getTime(), to: Date.now() };
+      }
+
+      async function loadTrail() {
+        trailLoaded = true;
+        trailContent.innerHTML = '<div class="trail__empty"><div class="trail__empty-text">Loading...</div></div>';
+
+        try {
+          var params = new URLSearchParams();
+          var summaryParams = new URLSearchParams();
+          if (trailRange === 'month') {
+            var range = getMonthRange();
+            params.set('from', range.from);
+            params.set('to', range.to);
+            summaryParams.set('from', range.from);
+            summaryParams.set('to', range.to);
+          }
+
+          var trailRes = await apiFetch(API + '/trail?' + params.toString());
+          var summaryRes = await apiFetch(API + '/trail/summary?' + summaryParams.toString());
+          if (!trailRes.ok || !summaryRes.ok) throw new Error('fetch failed');
+
+          var fibers = await trailRes.json();
+          var summary = await summaryRes.json();
+
+          if (!fibers.length) {
+            renderTrailEmpty();
+            return;
+          }
+
+          renderTrail(fibers, summary);
+        } catch (err) {
+          console.error('궤적 로드 실패:', err);
+          renderTrailEmpty();
+        }
+      }
+
+      function renderTrailEmpty() {
+        trailContent.innerHTML =
+          '<div class="trail__empty">' +
+            '<div class="trail__empty-icon">· · ·</div>' +
+            '<div class="trail__empty-text">No pieces yet</div>' +
+            '<div class="trail__empty-sub">Catch your first piece in the Catch tab</div>' +
+          '</div>';
+      }
+
+      function sensitivitySize(tension) {
+        // tension 1~5 → 감도 20~100 → 크기 클래스 s1~s5
+        var s = (tension || 3) * 20;
+        if (s <= 20) return 's1';
+        if (s <= 40) return 's2';
+        if (s <= 60) return 's3';
+        if (s <= 80) return 's4';
+        return 's5';
+      }
+
+      function renderTrail(fibers, summary) {
+        // 날짜별 그룹핑 (최신 위)
+        var grouped = {}; // { 'YYYY-MM': { label, days: { 'DD': [fiber, ...] } } }
+        var monthOrder = [];
+
+        fibers.forEach(function(f) {
+          var d = new Date(f.caught_at);
+          var mKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+          var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          var mLabel = MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+          var day = d.getDate();
+
+          if (!grouped[mKey]) {
+            grouped[mKey] = { label: mLabel, days: {}, dayOrder: [] };
+            monthOrder.push(mKey);
+          }
+          if (!grouped[mKey].days[day]) {
+            grouped[mKey].days[day] = [];
+            grouped[mKey].dayOrder.push(day);
+          }
+          grouped[mKey].days[day].push(f);
+        });
+
+        var html = '<div class="trail__scroll">';
+
+        monthOrder.forEach(function(mKey) {
+          var month = grouped[mKey];
+          html += '<div class="trail__month">' + escHtml(month.label) + '</div>';
+
+          // 날짜 내림차순
+          month.dayOrder.forEach(function(day) {
+            var dayFibers = month.days[day];
+            html += '<div class="trail__day">';
+            html += '<span class="trail__day-label">' + day + '</span>';
+            html += '<div class="trail__dots">';
+            dayFibers.forEach(function(f) {
+              var tone = f.tone || 'positive';
+              var color = TONE_COLOR[tone] || TONE_COLOR.positive;
+              var size = sensitivitySize(f.tension);
+              html += '<div class="trail__dot trail__dot--' + size + '" ' +
+                'data-fiber-id="' + f.id + '" ' +
+                'data-fiber-text="' + escHtml(f.text) + '" ' +
+                'style="background:' + color + '" ' +
+                'title="' + escHtml(f.text) + '"></div>';
+            });
+            html += '</div>'; // .trail__dots
+            html += '</div>'; // .trail__day
+          });
+        });
+
+        html += '</div>'; // .trail__scroll
+
+        // 하단 요약
+        var rangeLabel = trailRange === 'month' ? 'This month' : 'All time';
+        html += '<div class="trail__summary">';
+        html += '<div class="trail__summary-count">' + rangeLabel + ': ' + summary.total + ' pieces</div>';
+        html += '<div class="trail__summary-tones">';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.positive + '"></span> Positive ' + summary.positive + '</span>';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.critic + '"></span> Critic ' + summary.critic + '</span>';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.hold + '"></span> Hold ' + summary.hold + '</span>';
+        html += '</div>';
+        html += '<div>Avg sensitivity ' + summary.avgSensitivity + '</div>';
+        html += '</div>';
+
+        trailContent.innerHTML = html;
+
+        // 점 탭/길게 누르기 핸들러
+        trailContent.querySelectorAll('.trail__dot').forEach(function(dot) {
+          var pressTimer = null;
+
+          dot.addEventListener('pointerdown', function(e) {
+            pressTimer = setTimeout(function() {
+              pressTimer = null;
+              // 길게 누르기 → 멀티선택
+              if (!trailSelectMode) {
+                enterTrailSelect(dot.dataset.fiberId);
+              } else {
+                toggleTrailSelect(dot.dataset.fiberId);
+              }
+            }, 500);
+          });
+
+          dot.addEventListener('pointerup', function() {
+            if (pressTimer !== null) {
+              clearTimeout(pressTimer);
+              pressTimer = null;
+              // 짧은 탭
+              var fiberId = dot.dataset.fiberId;
+              if (trailSelectMode) {
+                toggleTrailSelect(fiberId);
+              } else {
+                var label = dot.dataset.fiberText || 'piece';
+                focusHistory = [];
+                openFocus('fiber', fiberId, truncate(label, 20));
+              }
+            }
+          });
+
+          dot.addEventListener('pointerleave', function() {
+            if (pressTimer !== null) { clearTimeout(pressTimer); pressTimer = null; }
+          });
+
+          dot.addEventListener('pointercancel', function() {
+            if (pressTimer !== null) { clearTimeout(pressTimer); pressTimer = null; }
+          });
+
+          dot.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        });
+      }
+
+      // --- 유틸 ---
+      function escHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function truncate(s, n) {
+        if (!s) return '';
+        return s.length > n ? s.slice(0, n) + '...' : s;
+      }
+
+      // ====== 궤적 멀티선택 ======
+
+      var trailSelectMode = false;
+      var trailSelectedIds = [];
+      var trailSelectBar = null;
+
+      function enterTrailSelect(firstId) {
+        trailSelectMode = true;
+        trailSelectedIds = [firstId];
+        updateTrailDotSelection();
+        showTrailSelectBar();
+      }
+
+      function exitTrailSelect() {
+        trailSelectMode = false;
+        trailSelectedIds = [];
+        updateTrailDotSelection();
+        hideTrailSelectBar();
+      }
+
+      function toggleTrailSelect(id) {
+        var idx = trailSelectedIds.indexOf(id);
+        if (idx >= 0) {
+          trailSelectedIds.splice(idx, 1);
+        } else {
+          trailSelectedIds.push(id);
+        }
+        if (trailSelectedIds.length === 0) {
+          exitTrailSelect();
+          return;
+        }
+        updateTrailDotSelection();
+        updateTrailSelectBarContent();
+      }
+
+      function updateTrailDotSelection() {
+        trailContent.querySelectorAll('.trail__dot').forEach(function(dot) {
+          dot.classList.toggle('is-selected', trailSelectedIds.indexOf(dot.dataset.fiberId) >= 0);
+        });
+      }
+
+      function showTrailSelectBar() {
+        hideTrailSelectBar();
+        trailSelectBar = document.createElement('div');
+        trailSelectBar.className = 'trail__select-bar';
+        updateTrailSelectBarContent();
+        document.body.appendChild(trailSelectBar);
+      }
+
+      function hideTrailSelectBar() {
+        if (trailSelectBar) {
+          trailSelectBar.remove();
+          trailSelectBar = null;
+        }
+      }
+
+      function updateTrailSelectBarContent() {
+        if (!trailSelectBar) return;
+        var count = trailSelectedIds.length;
+        trailSelectBar.innerHTML =
+          '<span class="trail__select-count">' + count + ' selected</span>' +
+          '<button class="trail__select-cancel">Cancel</button>' +
+          '<button class="trail__select-link"' + (count < 2 ? ' disabled' : '') + '>Link</button>';
+
+        trailSelectBar.querySelector('.trail__select-cancel').addEventListener('click', exitTrailSelect);
+        trailSelectBar.querySelector('.trail__select-link').addEventListener('click', function() {
+          if (trailSelectedIds.length >= 2) {
+            var ids = trailSelectedIds.slice();
+            exitTrailSelect();
+            openLinkSheet(ids);
+          }
+        });
+      }
+
+      // ====== 연결하기 시트 ======
+
+      var linkSheet = document.getElementById('linkSheet');
+      var linkMembers = document.getElementById('linkMembers');
+      var linkAddBtn = document.getElementById('linkAddBtn');
+      var linkSearch = document.getElementById('linkSearch');
+      var linkSearchInput = document.getElementById('linkSearchInput');
+      var linkSearchResults = document.getElementById('linkSearchResults');
+      var linkWhyInput = document.getElementById('linkWhyInput');
+      var linkSubmitBtn = document.getElementById('linkSubmitBtn');
+      var linkSheetBackdrop = document.getElementById('linkSheetBackdrop');
+
+      var linkMemberFibers = []; // [{ id, text, tone }]
+      var linkSearchTimer = null;
+
+      function openLinkSheet(fiberIds) {
+        linkMemberFibers = [];
+        linkWhyInput.value = '';
+        linkSearch.classList.remove('is-open');
+        linkSearchInput.value = '';
+        linkSearchResults.innerHTML = '';
+
+        var promises = fiberIds.map(function(id) {
+          return apiFetch(API + '/fibers/' + id).then(function(r) { return r.json(); });
+        });
+
+        Promise.all(promises).then(function(fibers) {
+          fibers.forEach(function(f) {
+            if (f && f.id) linkMemberFibers.push({ id: f.id, text: f.text, tone: f.tone || 'positive' });
+          });
+          renderLinkMembers();
+          updateLinkSubmit();
+          linkSheet.classList.add('is-open');
+        });
+      }
+
+      function closeLinkSheet() {
+        linkSheet.classList.remove('is-open');
+        linkMemberFibers = [];
+      }
+
+      function renderLinkMembers() {
+        var html = '';
+        linkMemberFibers.forEach(function(f, i) {
+          var color = TONE_COLOR[f.tone] || TONE_COLOR.positive;
+          html += '<div class="link-member">';
+          html += '<span class="link-member__dot" style="background:' + color + '"></span>';
+          html += '<span class="link-member__text">' + escHtml(truncate(f.text, 30)) + '</span>';
+          html += '<button class="link-member__remove" data-idx="' + i + '">&times;</button>';
+          html += '</div>';
+        });
+        linkMembers.innerHTML = html;
+
+        linkMembers.querySelectorAll('.link-member__remove').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var idx = parseInt(btn.dataset.idx);
+            linkMemberFibers.splice(idx, 1);
+            renderLinkMembers();
+            updateLinkSubmit();
+          });
+        });
+      }
+
+      function updateLinkSubmit() {
+        linkSubmitBtn.disabled = linkMemberFibers.length < 2;
+      }
+
+      // 조각 추가 (검색 토글)
+      linkAddBtn.addEventListener('click', function() {
+        linkSearch.classList.toggle('is-open');
+        if (linkSearch.classList.contains('is-open')) {
+          linkSearchInput.focus();
+        }
+      });
+
+      // 검색
+      linkSearchInput.addEventListener('input', function() {
+        if (linkSearchTimer) clearTimeout(linkSearchTimer);
+        linkSearchTimer = setTimeout(doLinkSearch, 200);
+      });
+
+      function doLinkSearch() {
+        var q = linkSearchInput.value.trim();
+        if (!q) {
+          linkSearchResults.innerHTML = '';
+          return;
+        }
+
+        apiFetch(API + '/fibers?search=' + encodeURIComponent(q))
+          .then(function(r) { return r.json(); })
+          .then(function(fibers) {
+            if (!fibers || !fibers.length) {
+              linkSearchResults.innerHTML = '<div style="padding:10px;color:var(--text-muted);font-size:0.85rem;">No results</div>';
+              return;
+            }
+            var existingIds = linkMemberFibers.map(function(m) { return m.id; });
+            var html = '';
+            fibers.slice(0, 10).forEach(function(f) {
+              var isSelected = existingIds.indexOf(f.id) >= 0;
+              var tone = f.tone || 'positive';
+              var color = TONE_COLOR[tone] || TONE_COLOR.positive;
+              var timeAgo = relativeTime(f.caught_at || f.created_at);
+              html += '<div class="link-search-item' + (isSelected ? ' is-selected' : '') + '" data-fiber-id="' + f.id + '" data-fiber-text="' + escHtml(f.text) + '" data-fiber-tone="' + tone + '">';
+              html += '<span class="link-search-item__dot" style="background:' + color + '"></span>';
+              html += '<span class="link-search-item__text">' + escHtml(truncate(f.text, 40)) + '</span>';
+              html += '<span class="link-search-item__time">' + escHtml(timeAgo) + '</span>';
+              html += '</div>';
+            });
+            linkSearchResults.innerHTML = html;
+
+            linkSearchResults.querySelectorAll('.link-search-item:not(.is-selected)').forEach(function(item) {
+              item.addEventListener('click', function() {
+                linkMemberFibers.push({
+                  id: item.dataset.fiberId,
+                  text: item.dataset.fiberText,
+                  tone: item.dataset.fiberTone
+                });
+                renderLinkMembers();
+                updateLinkSubmit();
+                doLinkSearch(); // 선택 상태 갱신
+              });
+            });
+          });
+      }
+
+      // 연결 제출
+      linkSubmitBtn.addEventListener('click', async function() {
+        if (linkMemberFibers.length < 2) return;
+        linkSubmitBtn.disabled = true;
+        linkSubmitBtn.textContent = 'Linking...';
+
+        try {
+          var body = {
+            members: linkMemberFibers.map(function(m) { return m.id; }),
+            why: linkWhyInput.value.trim()
+          };
+
+          var res = await apiFetch(API + '/links', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+          if (!res.ok) throw new Error('link failed');
+
+          closeLinkSheet();
+          linkSubmitBtn.textContent = 'Link';
+
+          // 포커스뷰가 열려있으면 리로드
+          if (focusView.classList.contains('is-active') && focusHistory.length > 0) {
+            var current = focusHistory[focusHistory.length - 1];
+            loadFocusContent(current.type, current.id);
+          }
+        } catch (err) {
+          console.error('연결 실패:', err);
+          linkSubmitBtn.textContent = 'Retry';
+          linkSubmitBtn.disabled = false;
+          setTimeout(function() {
+            linkSubmitBtn.textContent = 'Link';
+            updateLinkSubmit();
+          }, 2000);
+        }
+      });
+
+      // 배경 탭으로 닫기
+      linkSheetBackdrop.addEventListener('click', closeLinkSheet);
+
+      // --- textarea 자동 높이 ---
+      function autoResize(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
+      }
+      textInput.addEventListener('input', function() { autoResize(textInput); });
+      thoughtInput.addEventListener('input', function() { autoResize(thoughtInput); });
+
+      // --- Service Worker ---
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+      }
+
+    })();
+  </script>
+
+</body>
+</html>

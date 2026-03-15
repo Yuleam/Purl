@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(npm install @xenova/transformers)",
-      "Bash(node index.js)"
+      "Bash(node index.js)",
+      "Bash(node -e \"require\\(''./server/routes/threads.js''\\)\")",
+      "Bash(node -c js/ui/focus-view.js)",
+      "Bash(node -c js/ui/source-panel.js)",
+      "Bash(node -c js/ui/detail-panel.js)"
     ]
   }
 }

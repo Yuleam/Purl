@@ -21,6 +21,7 @@
       <div class="sidebar-header">
         <span class="sidebar-header__title">노트</span>
         <span class="sidebar-header__count" id="noteCount">0</span>
+        <a href="explorer.html" class="sidebar-header__nav" title="탐색 페이지로 이동">탐색 &#8594;</a>
         <button type="button" class="sidebar-toggle" id="notesToggle" title="접기">&#9664;</button>
       </div>
       <div class="sidebar-actions">
@@ -164,6 +165,13 @@
     </aside>
     <button type="button" class="panel-expand panel-expand--right" id="panelExpand" title="바구니 펼치기">&#9664;</button>
 
+  </div>
+
+  <!-- Fiber Tooltip (하이라이트 hover) -->
+  <div class="fiber-tooltip" id="fiberTooltip">
+    <div class="fiber-tooltip__tension" id="fiberTooltipTension"></div>
+    <div class="fiber-tooltip__tone" id="fiberTooltipTone"></div>
+    <div class="fiber-tooltip__thought" id="fiberTooltipThought"></div>
   </div>
 
   <!-- Context Menu: Note text -->

@@ -119,7 +119,59 @@ var BasketPanel = (function () {
       detailMode = true;
       render();
     });
+    span.addEventListener('mouseenter', function (e) {
+      _showFiberTooltip(fiberId, e);
+    });
+    span.addEventListener('mouseleave', function () {
+      _hideFiberTooltip();
+    });
     return span;
+  }
+
+  // ── Fiber Tooltip (하이라이트 hover) ──
+
+  var _tooltipTimer = null;
+
+  function _showFiberTooltip(fiberId, e) {
+    var fiber = fibers.find(function (f) { return f.id === fiberId; });
+    if (!fiber) return;
+
+    var $tooltip = document.getElementById('fiberTooltip');
+    var $tension = document.getElementById('fiberTooltipTension');
+    var $tone = document.getElementById('fiberTooltipTone');
+    var $thought = document.getElementById('fiberTooltipThought');
+    if (!$tooltip) return;
+
+    // 장력 표시
+    var dots = '';
+    for (var i = 1; i <= 5; i++) {
+      dots += i <= fiber.tension ? '\u25CF' : '\u25CB';
+    }
+    $tension.textContent = dots;
+
+    // 결 표시
+    var toneLabels = { resonance: '공명', friction: '마찰', question: '물음' };
+    $tone.textContent = toneLabels[fiber.tone] || '공명';
+    $tone.className = 'fiber-tooltip__tone fiber-tooltip__tone--' + (fiber.tone || 'resonance');
+
+    // 생각 표시
+    if (fiber.thought && fiber.thought.trim()) {
+      $thought.textContent = fiber.thought.length > 50 ? fiber.thought.substring(0, 50) + '...' : fiber.thought;
+      $thought.style.display = '';
+    } else {
+      $thought.style.display = 'none';
+    }
+
+    // 위치 계산
+    var rect = e.target.getBoundingClientRect();
+    $tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+    $tooltip.style.top = (rect.top - 8) + 'px';
+    $tooltip.classList.add('is-visible');
+  }
+
+  function _hideFiberTooltip() {
+    var $tooltip = document.getElementById('fiberTooltip');
+    if ($tooltip) $tooltip.classList.remove('is-visible');
   }
 
   function _applyFiberHighlight(fiberId, sourceRange) {
@@ -164,6 +216,30 @@ var BasketPanel = (function () {
       if (contentEl.querySelector('[data-fiber-id="' + f.id + '"]')) return;
       _applyFiberHighlight(f.id, f.source_range);
     });
+  }
+
+  // ── Editor highlight interaction (바구니 → 에디터) ──
+
+  function _flashEditorHighlight(fiberId, on) {
+    var contentEl = NoteEditor.getContentElement();
+    if (!contentEl) return;
+    var hl = contentEl.querySelector('[data-fiber-id="' + fiberId + '"]');
+    if (!hl) return;
+    if (on) {
+      hl.classList.add('is-active');
+    } else {
+      hl.classList.remove('is-active');
+    }
+  }
+
+  function _scrollToEditorHighlight(fiberId) {
+    var contentEl = NoteEditor.getContentElement();
+    if (!contentEl) return;
+    var hl = contentEl.querySelector('[data-fiber-id="' + fiberId + '"]');
+    if (!hl) return;
+    hl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    hl.classList.add('text-highlight--flash');
+    setTimeout(function () { hl.classList.remove('text-highlight--flash'); }, 1500);
   }
 
   // ── Context menu ──
@@ -347,7 +423,15 @@ var BasketPanel = (function () {
         cleanup();
         // Apply highlight immediately
         if (sourceRange && fiber) _applyFiberHighlight(fiber.id, sourceRange);
-        refresh();
+        // 올 잡기 직후 → 상세 화면(유사 올 힌트 포함)을 바로 열어 재발견 유도
+        FiberAPI.listFibers().then(function (data) {
+          fibers = data || [];
+          if (fiber && fiber.id) {
+            selectedFiberId = fiber.id;
+            detailMode = true;
+          }
+          render();
+        });
       }).catch(function () {
         KnittingDialog.alert('올 잡기 실패', '서버가 꺼져있을 수 있습니다.');
         cleanup();
@@ -439,7 +523,21 @@ var BasketPanel = (function () {
       });
     });
 
+    // Hover → 에디터 하이라이트 깜박임
+    card.addEventListener('mouseenter', function () {
+      _flashEditorHighlight(fiber.id, true);
+    });
+    card.addEventListener('mouseleave', function () {
+      _flashEditorHighlight(fiber.id, false);
+    });
+
+    // 클릭: 현재 노트의 올이면 에디터 스크롤, 아니면 상세 보기
     card.addEventListener('click', function () {
+      var currentNoteId = NoteEditor.getCurrentNoteId();
+      if (fiber.source_note_id && fiber.source_note_id === currentNoteId) {
+        // 현재 노트 → 스크롤만
+        _scrollToEditorHighlight(fiber.id);
+      }
       selectedFiberId = fiber.id;
       detailMode = true;
       render();
@@ -591,7 +689,7 @@ var BasketPanel = (function () {
     stitchesSection.className = 'basket-detail__stitches';
     var stitchesLabel = document.createElement('div');
     stitchesLabel.className = 'basket-detail__label';
-    stitchesLabel.textContent = '엮인 코';
+    stitchesLabel.textContent = '연결된 실';
     stitchesSection.appendChild(stitchesLabel);
 
     var stitchesList = document.createElement('div');
@@ -608,14 +706,14 @@ var BasketPanel = (function () {
 
     // Load stitches async
     var fiberStitches = [];
-    FiberAPI.listStitches(fiberId).then(function (stitches) {
+    FiberAPI.listThreads(fiberId).then(function (stitches) {
       var loadingEl = stitchesList.querySelector('.stitches-loading');
       if (loadingEl) loadingEl.remove();
 
       if (!stitches || !stitches.length) {
         var noStitches = document.createElement('div');
         noStitches.className = 'stitches-empty';
-        noStitches.textContent = '아직 엮인 코가 없습니다.';
+        noStitches.textContent = '아직 연결된 실이 없습니다.';
         stitchesList.appendChild(noStitches);
         return;
       }
@@ -624,22 +722,26 @@ var BasketPanel = (function () {
       knotBtn.disabled = false;
 
       stitches.forEach(function (s) {
-        var otherId = s.fiber_a_id === fiberId ? s.fiber_b_id : s.fiber_a_id;
-        var otherFiber = fibers.find(function (f) { return f.id === otherId; });
-        var otherText = otherFiber ? otherFiber.text : '(삭제된 올)';
-        if (otherText.length > 60) otherText = otherText.substring(0, 60) + '...';
+        // 새 모델: s.fiber_ids / s.fibers 배열에서 현재 올 제외한 다른 올들
+        var otherFiberIds = (s.fiber_ids || []).filter(function (id) { return id !== fiberId; });
+        var otherTexts = otherFiberIds.map(function (id) {
+          var f = fibers.find(function (ff) { return ff.id === id; });
+          var text = f ? f.text : '(삭제된 올)';
+          return text.length > 60 ? text.substring(0, 60) + '...' : text;
+        });
+        var displayText = otherTexts.join(' + ') || '(올 없음)';
 
         var stitchEl = document.createElement('div');
         stitchEl.className = 'stitch-item';
         stitchEl.innerHTML =
-          '<div class="stitch-item__text">' + esc(otherText) + '</div>' +
+          '<div class="stitch-item__text">' + esc(displayText) + '</div>' +
           (s.why ? '<div class="stitch-item__why">' + esc(s.why) + '</div>' : '') +
-          '<button class="stitch-item__delete" title="코 삭제">&times;</button>';
+          '<button class="stitch-item__delete" title="실 삭제">&times;</button>';
 
         stitchEl.querySelector('.stitch-item__delete').addEventListener('click', function (e) {
           e.stopPropagation();
-          KnittingDialog.confirm({ message: '이 코를 삭제할까요?', confirmLabel: '삭제', danger: true }, function () {
-            FiberAPI.deleteStitch(s.id).then(function () {
+          KnittingDialog.confirm({ message: '이 실을 삭제할까요?', confirmLabel: '삭제', danger: true }, function () {
+            FiberAPI.deleteThread(s.id).then(function () {
               stitchEl.remove();
               fiberStitches = fiberStitches.filter(function (st) { return st.id !== s.id; });
               if (!fiberStitches.length) knotBtn.disabled = true;
@@ -648,15 +750,18 @@ var BasketPanel = (function () {
         });
 
         stitchEl.addEventListener('click', function () {
-          selectedFiberId = otherId;
-          _renderDetail(otherId);
+          var targetId = otherFiberIds[0];
+          if (targetId) {
+            selectedFiberId = targetId;
+            _renderDetail(targetId);
+          }
         });
 
         stitchesList.appendChild(stitchEl);
       });
     }).catch(function () {
       var loadingEl = stitchesList.querySelector('.stitches-loading');
-      if (loadingEl) loadingEl.textContent = '코를 불러올 수 없습니다.';
+      if (loadingEl) loadingEl.textContent = '실을 불러올 수 없습니다.';
     });
 
     // Knot button handler
@@ -769,9 +874,8 @@ var BasketPanel = (function () {
             placeholder: '이유나 느낌...',
             submitLabel: '엮기'
           }, function (why) {
-            FiberAPI.createStitch({
-              fiber_a_id: fiberId,
-              fiber_b_id: hId,
+            FiberAPI.createThread({
+              fiber_ids: [fiberId, hId],
               why: why || ''
             }).then(function () {
               stitchBtn.textContent = '연결됨';
@@ -826,10 +930,13 @@ var BasketPanel = (function () {
     input.value = '';
 
     stitchList.forEach(function (s) {
-      var otherId = s.fiber_a_id === fiberId ? s.fiber_b_id : s.fiber_a_id;
-      var otherFiber = fibers.find(function (f) { return f.id === otherId; });
-      var otherText = otherFiber ? otherFiber.text : '(삭제된 올)';
-      if (otherText.length > 50) otherText = otherText.substring(0, 50) + '...';
+      var otherIds = (s.fiber_ids || []).filter(function (id) { return id !== fiberId; });
+      var otherTexts = otherIds.map(function (id) {
+        var f = fibers.find(function (ff) { return ff.id === id; });
+        var text = f ? f.text : '(삭제된 올)';
+        return text.length > 50 ? text.substring(0, 50) + '...' : text;
+      });
+      var otherText = otherTexts.join(' + ') || '(올 없음)';
 
       var item = document.createElement('label');
       item.className = 'knot-stitch-item';

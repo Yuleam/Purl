@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purl — Trail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --bg-secondary: #f2f0ec;
+      --surface: #ffffff;
+      --surface-hover: #f7f6f3;
+      --border: #e8e5df;
+      --border-light: #f0eee9;
+      --text: #2c2c2c;
+      --text-secondary: #6b6b6b;
+      --text-muted: #a0a0a0;
+      --accent: #b8956a;
+      --accent-hover: #a6834f;
+      --accent-light: rgba(184, 149, 106, 0.1);
+      --accent-border: rgba(184, 149, 106, 0.3);
+      --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-serif: 'Gowun Batang', Georgia, serif;
+      --tone-positive: #5a8a6a;
+      --tone-critic: #c4644a;
+      --tone-hold: #7a7a7a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ====== 레이아웃 ====== */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .app__topbar {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .app__title {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .app__nav {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+    .app__nav-btn {
+      background: none;
+      border: 1px solid var(--border);
+      font-family: var(--font);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 5px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .app__nav-btn:hover { border-color: var(--accent-border); color: var(--accent); }
+    .app__nav-btn.is-active {
+      background: var(--accent-light);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+
+    .app__body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ====== 좌: 궤적 패널 ====== */
+    .trail-panel {
+      width: 380px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .trail-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .trail-panel__title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .trail-panel__toggle {
+      display: flex;
+      gap: 4px;
+    }
+    .trail-panel__toggle-btn {
+      background: none;
+      border: 1px solid var(--border);
+      font-family: var(--font);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 3px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .trail-panel__toggle-btn.is-active {
+      background: var(--accent-light);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+
+    .trail-panel__scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 16px 16px;
+    }
+
+    /* 월 헤더 */
+    .trail__month {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin: 14px 0 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .trail__month:first-child { margin-top: 4px; }
+
+    /* 날짜 행 */
+    .trail__day {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 0;
+    }
+    .trail__day-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 30px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .trail__dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+
+    /* 점 */
+    .trail__dot {
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      flex-shrink: 0;
+    }
+    .trail__dot:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.2);
+    }
+    .trail__dot.is-selected {
+      box-shadow: 0 0 0 3px var(--accent);
+    }
+    .trail__dot--s1 { width: 8px; height: 8px; }
+    .trail__dot--s2 { width: 12px; height: 12px; }
+    .trail__dot--s3 { width: 16px; height: 16px; }
+    .trail__dot--s4 { width: 20px; height: 20px; }
+    .trail__dot--s5 { width: 24px; height: 24px; }
+
+    /* 요약 */
+    .trail__summary {
+      margin-top: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .trail__summary-count {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .trail__summary-tones {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 3px;
+    }
+    .trail__summary-tone {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .trail__summary-swatch {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* 빈 상태 */
+    .trail__empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .trail__empty-icon {
+      font-size: 1.3rem;
+      margin-bottom: 12px;
+      letter-spacing: 6px;
+    }
+    .trail__empty-text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .trail__empty-sub {
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    /* ====== 우: 상세 패널 ====== */
+    .detail-panel {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+    }
+
+    .detail-panel__empty {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* 조각 카드 */
+    .detail__card {
+      background: var(--surface);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+    }
+    .detail__text {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    .detail__meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .detail__tone {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .detail__tone--positive { background: rgba(90, 138, 106, 0.1); color: var(--tone-positive); }
+    .detail__tone--critic { background: rgba(196, 100, 74, 0.1); color: var(--tone-critic); }
+    .detail__tone--hold { background: rgba(122, 122, 122, 0.1); color: var(--tone-hold); }
+
+    .detail__sensitivity {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .detail__sensitivity-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      max-width: 200px;
+    }
+    .detail__sensitivity-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+    .detail__sensitivity-value {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .detail__thought {
+      padding: 12px 0;
+      border-top: 1px solid var(--border-light);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      line-height: 1.6;
+    }
+    .detail__source {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding-top: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .detail__source a { color: var(--accent); text-decoration: none; }
+    .detail__source a:hover { text-decoration: underline; }
+
+    .detail__time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+      text-align: right;
+    }
+
+    /* 연결 섹션 */
+    .detail__section {
+      margin-top: 24px;
+    }
+    .detail__section-header {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .detail__section-badge {
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .link-card {
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .link-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent-border);
+    }
+    .link-card__why {
+      font-size: 0.85rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .link-card__members {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .detail__no-links {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      padding: 16px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .anim-fade { animation: fadeIn 0.3s ease both; }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+    <!-- 상단 바 -->
+    <header class="app__topbar">
+      <span class="app__title">Purl</span>
+      <nav class="app__nav">
+        <a href="/capture.html" class="app__nav-btn">Mobile</a>
+        <button class="app__nav-btn is-active">Trail</button>
+      </nav>
+    </header>
+
+    <div class="app__body">
+      <!-- 좌: 궤적 -->
+      <aside class="trail-panel">
+        <div class="trail-panel__header">
+          <span class="trail-panel__title">Trail</span>
+          <div class="trail-panel__toggle" id="trailToggle">
+            <button class="trail-panel__toggle-btn is-active" data-range="month">This month</button>
+            <button class="trail-panel__toggle-btn" data-range="all">All</button>
+          </div>
+        </div>
+        <div class="trail-panel__scroll" id="trailScroll">
+          <!-- 동적으로 채워짐 -->
+        </div>
+      </aside>
+
+      <!-- 우: 상세 -->
+      <main class="detail-panel" id="detailPanel">
+        <div class="detail-panel__empty">
+          Select a dot on the trail<br>to see its full context here
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      var API = '/api';
+      var TONE_LABEL = { positive: 'Positive', critic: 'Critic', hold: 'Hold' };
+      var TONE_COLOR = { positive: '#5a8a6a', critic: '#c4644a', hold: '#7a7a7a' };
+
+      var trailScroll = document.getElementById('trailScroll');
+      var trailToggle = document.getElementById('trailToggle');
+      var detailPanel = document.getElementById('detailPanel');
+      var trailRange = 'month';
+      var selectedDotEl = null;
+
+      // ====== 기간 토글 ======
+      trailToggle.addEventListener('click', function(e) {
+        var btn = e.target.closest('.trail-panel__toggle-btn');
+        if (!btn) return;
+        var range = btn.dataset.range;
+        if (range === trailRange) return;
+        trailRange = range;
+        trailToggle.querySelectorAll('.trail-panel__toggle-btn').forEach(function(b) {
+          b.classList.toggle('is-active', b.dataset.range === range);
+        });
+        loadTrail();
+      });
+
+      function getMonthRange() {
+        var now = new Date();
+        var start = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { from: start.getTime(), to: Date.now() };
+      }
+
+      // ====== 궤적 로드 ======
+      async function loadTrail() {
+        trailScroll.innerHTML = '<div class="trail__empty"><div class="trail__empty-text">Loading...</div></div>';
+
+        try {
+          var params = new URLSearchParams();
+          var summaryParams = new URLSearchParams();
+          if (trailRange === 'month') {
+            var range = getMonthRange();
+            params.set('from', range.from);
+            params.set('to', range.to);
+            summaryParams.set('from', range.from);
+            summaryParams.set('to', range.to);
+          }
+
+          var trailRes = await fetch(API + '/trail?' + params.toString());
+          var summaryRes = await fetch(API + '/trail/summary?' + summaryParams.toString());
+          if (!trailRes.ok || !summaryRes.ok) throw new Error('fetch failed');
+
+          var fibers = await trailRes.json();
+          var summary = await summaryRes.json();
+
+          if (!fibers.length) {
+            trailScroll.innerHTML =
+              '<div class="trail__empty">' +
+                '<div class="trail__empty-icon">· · ·</div>' +
+                '<div class="trail__empty-text">No pieces yet</div>' +
+                '<div class="trail__empty-sub">Catch your first piece on mobile</div>' +
+              '</div>';
+            return;
+          }
+
+          renderTrail(fibers, summary);
+        } catch (err) {
+          console.error('Trail load failed:', err);
+          trailScroll.innerHTML = '<div class="trail__empty"><div class="trail__empty-text">Could not load</div></div>';
+        }
+      }
+
+      function sensitivitySize(tension) {
+        var s = (tension || 3) * 20;
+        if (s <= 20) return 's1';
+        if (s <= 40) return 's2';
+        if (s <= 60) return 's3';
+        if (s <= 80) return 's4';
+        return 's5';
+      }
+
+      function renderTrail(fibers, summary) {
+        // 날짜별 그룹핑
+        var grouped = {};
+        var monthOrder = [];
+
+        fibers.forEach(function(f) {
+          var d = new Date(f.caught_at);
+          var mKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+          var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          var mLabel = monthNames[d.getMonth()] + ' ' + d.getFullYear();
+          var day = d.getDate();
+
+          if (!grouped[mKey]) {
+            grouped[mKey] = { label: mLabel, days: {}, dayOrder: [] };
+            monthOrder.push(mKey);
+          }
+          if (!grouped[mKey].days[day]) {
+            grouped[mKey].days[day] = [];
+            grouped[mKey].dayOrder.push(day);
+          }
+          grouped[mKey].days[day].push(f);
+        });
+
+        var html = '';
+
+        monthOrder.forEach(function(mKey) {
+          var month = grouped[mKey];
+          html += '<div class="trail__month">' + esc(month.label) + '</div>';
+
+          month.dayOrder.forEach(function(day) {
+            var dayFibers = month.days[day];
+            html += '<div class="trail__day">';
+            html += '<span class="trail__day-label">' + day + '</span>';
+            html += '<div class="trail__dots">';
+            dayFibers.forEach(function(f) {
+              var tone = f.tone || 'positive';
+              var color = TONE_COLOR[tone] || TONE_COLOR.positive;
+              var size = sensitivitySize(f.tension);
+              html += '<div class="trail__dot trail__dot--' + size + '" ' +
+                'data-fiber-id="' + f.id + '" ' +
+                'style="background:' + color + '" ' +
+                'title="' + esc(f.text) + '"></div>';
+            });
+            html += '</div>';
+            html += '</div>';
+          });
+        });
+
+        // 요약
+        var rangeLabel = trailRange === 'month' ? 'This month' : 'All time';
+        html += '<div class="trail__summary">';
+        html += '<div class="trail__summary-count">' + rangeLabel + ': ' + summary.total + ' pieces</div>';
+        html += '<div class="trail__summary-tones">';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-swatch" style="background:' + TONE_COLOR.positive + '"></span> Positive ' + summary.positive + '</span>';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-swatch" style="background:' + TONE_COLOR.critic + '"></span> Critic ' + summary.critic + '</span>';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-swatch" style="background:' + TONE_COLOR.hold + '"></span> Hold ' + summary.hold + '</span>';
+        html += '</div>';
+        html += '<div>Avg sensitivity ' + summary.avgSensitivity + '</div>';
+        html += '</div>';
+
+        trailScroll.innerHTML = html;
+
+        // 점 클릭 → 상세 패널
+        trailScroll.querySelectorAll('.trail__dot').forEach(function(dot) {
+          dot.addEventListener('click', function() {
+            if (selectedDotEl) selectedDotEl.classList.remove('is-selected');
+            dot.classList.add('is-selected');
+            selectedDotEl = dot;
+            loadDetail(dot.dataset.fiberId);
+          });
+        });
+      }
+
+      // ====== 상세 패널 ======
+      async function loadDetail(fiberId) {
+        detailPanel.innerHTML = '<div class="detail-panel__empty">Loading...</div>';
+
+        try {
+          var fiberRes = await fetch(API + '/fibers/' + fiberId);
+          if (!fiberRes.ok) throw new Error('fiber not found');
+          var fiber = await fiberRes.json();
+
+          var linksRes = await fetch(API + '/fibers/' + fiberId + '/links');
+          var links = linksRes.ok ? await linksRes.json() : [];
+
+          renderDetail(fiber, links);
+        } catch (err) {
+          console.error('Detail load failed:', err);
+          detailPanel.innerHTML = '<div class="detail-panel__empty">Could not load</div>';
+        }
+      }
+
+      function renderDetail(fiber, links) {
+        var sensitivity = (fiber.tension || 3) * 20;
+        var tone = fiber.tone || 'positive';
+        var toneLabel = TONE_LABEL[tone] || 'Positive';
+        var toneColor = TONE_COLOR[tone] || TONE_COLOR.positive;
+        var timeAgo = relativeTime(fiber.caught_at || fiber.created_at);
+        var dateStr = formatDate(fiber.caught_at || fiber.created_at);
+
+        var html = '';
+        html += '<div class="detail__card anim-fade">';
+
+        // 텍스트
+        html += '<div class="detail__text">' + esc(fiber.text) + '</div>';
+
+        // 메타
+        html += '<div class="detail__meta">';
+        html += '<span class="detail__tone detail__tone--' + tone + '">' + toneLabel + '</span>';
+        html += '<div class="detail__sensitivity">';
+        html += '<div class="detail__sensitivity-bar">';
+        html += '<div class="detail__sensitivity-fill" style="width:' + sensitivity + '%;background:' + toneColor + '"></div>';
+        html += '</div>';
+        html += '<span class="detail__sensitivity-value">' + sensitivity + '</span>';
+        html += '</div>';
+        html += '</div>';
+
+        // 생각
+        if (fiber.thought) {
+          html += '<div class="detail__thought">' + esc(fiber.thought) + '</div>';
+        }
+
+        // 출처
+        if (fiber.source) {
+          var isUrl = fiber.source.startsWith('http');
+          html += '<div class="detail__source">';
+          html += isUrl
+            ? '<a href="' + esc(fiber.source) + '" target="_blank">' + esc(truncate(fiber.source, 60)) + '</a>'
+            : esc(fiber.source);
+          html += '</div>';
+        }
+
+        // 시간
+        html += '<div class="detail__time">' + esc(dateStr) + ' (' + esc(timeAgo) + ')</div>';
+
+        html += '</div>'; // .detail__card
+
+        // 연결 목록
+        if (links.length > 0) {
+          html += '<div class="detail__section anim-fade" style="animation-delay:0.1s">';
+          html += '<div class="detail__section-header">Links <span class="detail__section-badge">' + links.length + '</span></div>';
+          links.forEach(function(lnk) {
+            var members = (lnk.members || []).filter(function(m) { return m.id !== fiber.id; });
+            var memberTexts = members.map(function(m) { return truncate(m.text || '', 40); }).join(' / ');
+            html += '<div class="link-card" data-link-id="' + lnk.id + '">';
+            html += '<div class="link-card__why">' + esc(lnk.why || '(no reason)') + '</div>';
+            if (memberTexts) {
+              html += '<div class="link-card__members">' + esc(memberTexts) + '</div>';
+            }
+            html += '</div>';
+          });
+          html += '</div>';
+        } else {
+          html += '<div class="detail__no-links anim-fade" style="animation-delay:0.1s">No links yet.<br>Catch more and connections will start to appear.</div>';
+        }
+
+        detailPanel.innerHTML = html;
+
+        // 연결 카드 클릭 → 연결의 다른 조각으로 이동
+        detailPanel.querySelectorAll('.link-card').forEach(function(card) {
+          card.addEventListener('click', function() {
+            var linkId = card.dataset.linkId;
+            // 연결의 다른 멤버 중 첫 번째로 이동
+            var lnk = links.find(function(l) { return l.id === linkId; });
+            if (lnk && lnk.members) {
+              var other = lnk.members.find(function(m) { return m.id !== fiber.id; });
+              if (other) {
+                // 궤적에서 해당 점 하이라이트
+                var dot = trailScroll.querySelector('.trail__dot[data-fiber-id="' + other.id + '"]');
+                if (dot) {
+                  if (selectedDotEl) selectedDotEl.classList.remove('is-selected');
+                  dot.classList.add('is-selected');
+                  selectedDotEl = dot;
+                  dot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                loadDetail(other.id);
+              }
+            }
+          });
+        });
+      }
+
+      // ====== 유틸 ======
+      function esc(s) {
+        if (!s) return '';
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function truncate(s, n) {
+        if (!s) return '';
+        return s.length > n ? s.slice(0, n) + '…' : s;
+      }
+
+      function relativeTime(ts) {
+        if (!ts) return '';
+        var diff = Date.now() - ts;
+        var sec = Math.floor(diff / 1000);
+        var min = Math.floor(sec / 60);
+        var hour = Math.floor(min / 60);
+        var day = Math.floor(hour / 24);
+        var week = Math.floor(day / 7);
+        var month = Math.floor(day / 30);
+
+        if (sec < 60) return 'just now';
+        if (min < 60) return min + 'm ago';
+        if (hour < 24) return hour + 'h ago';
+        if (day < 7) return day + 'd ago';
+        if (week < 5) return week + 'w ago';
+        if (month < 12) return month + 'mo ago';
+        return Math.floor(day / 365) + 'y ago';
+      }
+
+      function formatDate(ts) {
+        if (!ts) return '';
+        var d = new Date(ts);
+        return d.getFullYear() + '.' + (d.getMonth() + 1) + '.' + d.getDate();
+      }
+
+      // ====== 초기 로드 ======
+      loadTrail();
+
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 /**
  * Graph Panel — 뜨개판 시각화
- * 올(노드)과 코(엣지)의 연결 그래프를 force-directed layout으로 표시
+ * 올(노드)과 실(엣지)의 연결 그래프를 force-directed layout으로 표시
  * 의존: FiberAPI, BasketPanel
  */
 var GraphPanel = (function () {
@@ -102,7 +102,7 @@ var GraphPanel = (function () {
   function refresh() {
     Promise.all([
       FiberAPI.listFibers(),
-      FiberAPI.listStitches(),
+      FiberAPI.listThreads(),
       FiberAPI.listKnots()
     ]).then(function (results) {
       _loadKnottedStitches(results[2] || []);
@@ -152,11 +152,18 @@ var GraphPanel = (function () {
       });
     });
 
+    // 새 모델: 실(thread)의 fiber_ids 배열로 엣지 생성
+    // 2개 이상의 올을 가진 실은 모든 조합으로 엣지 생성
     stitches.forEach(function (s) {
-      var ai = nodeMap[s.fiber_a_id];
-      var bi = nodeMap[s.fiber_b_id];
-      if (ai !== undefined && bi !== undefined) {
-        edges.push({ id: s.id, sourceIdx: ai, targetIdx: bi, why: s.why || '' });
+      var fids = s.fiber_ids || [];
+      for (var fi = 0; fi < fids.length; fi++) {
+        for (var fj = fi + 1; fj < fids.length; fj++) {
+          var ai = nodeMap[fids[fi]];
+          var bi = nodeMap[fids[fj]];
+          if (ai !== undefined && bi !== undefined) {
+            edges.push({ id: s.id, sourceIdx: ai, targetIdx: bi, why: s.why || '' });
+          }
+        }
       }
     });
 
@@ -754,9 +761,9 @@ var GraphPanel = (function () {
 
   function _openGraphKnotDialog(node) {
     // Load stitches for this node, then open the knot dialog
-    FiberAPI.listStitches(node.id).then(function (stitches) {
+    FiberAPI.listThreads(node.id).then(function (stitches) {
       if (!stitches || !stitches.length) {
-        KnittingDialog.alert('이 올에 엮인 코가 없습니다.');
+        KnittingDialog.alert('이 올에 연결된 실이 없습니다.');
         return;
       }
       // Use BasketPanel's knot dialog opener if available

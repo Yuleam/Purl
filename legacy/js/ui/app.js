@@ -127,7 +127,10 @@
       }
       if (typeof BasketPanel !== 'undefined') {
         BasketPanel.setScope([n.id]);
-        BasketPanel.refreshHighlights(NoteEditor.getCurrentNoteId());
+        // loadNote 후 DOM 안정화 대기 후 하이라이트
+        setTimeout(function () {
+          BasketPanel.refreshHighlights(n.id);
+        }, 80);
       }
     });
 
@@ -885,7 +888,13 @@
     NoteEditor.init({
       onNoteChanged: function () {
         renderNoteList();
-        if (typeof BasketPanel !== 'undefined') BasketPanel.refreshHighlights(NoteEditor.getCurrentNoteId());
+        if (typeof BasketPanel !== 'undefined') {
+          var noteId = NoteEditor.getCurrentNoteId();
+          // DOM 업데이트 후 하이라이트 적용 (contenteditable 렌더링 대기)
+          setTimeout(function () {
+            BasketPanel.refreshHighlights(noteId);
+          }, 50);
+        }
       }
     });
 
@@ -962,9 +971,12 @@
       if (!note) return false;
       NoteEditor.loadNote(noteId);
       _showEditor();
+      renderNoteList();
       if (typeof BasketPanel !== 'undefined') {
         BasketPanel.setScope([noteId]);
-        BasketPanel.refreshHighlights(noteId);
+        setTimeout(function () {
+          BasketPanel.refreshHighlights(noteId);
+        }, 80);
       }
       return true;
     }

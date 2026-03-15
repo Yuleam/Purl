@@ -76,6 +76,20 @@
   --tone-resonance: #b8956a;
   --tone-friction: #c26b6b;
   --tone-question: #6ba3c2;
+
+  /* Tone backgrounds (포커스 카드용, 은은하게) */
+  --tone-resonance-bg: rgba(184, 149, 106, 0.08);
+  --tone-friction-bg: rgba(194, 107, 107, 0.08);
+  --tone-question-bg: rgba(107, 163, 194, 0.08);
+
+  /* Card shadow */
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Tone backgrounds — 불투명 (확장 카드용, surface 위에 tone 합성) */
+  --tone-resonance-bg-solid: #f9f7f3;
+  --tone-friction-bg-solid: #faf3f3;
+  --tone-question-bg-solid: #f3f8fa;
+
 }
 
 @media (prefers-color-scheme: dark) {
@@ -109,5 +123,19 @@
     --tone-resonance: #c8a96e;
     --tone-friction: #e07070;
     --tone-question: #7db8d4;
+
+    /* Tone backgrounds (포커스 카드용) */
+    --tone-resonance-bg: rgba(200, 169, 110, 0.12);
+    --tone-friction-bg: rgba(224, 112, 112, 0.12);
+    --tone-question-bg: rgba(125, 184, 212, 0.12);
+
+    /* Card shadow */
+    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+    /* Tone backgrounds — 불투명 (확장 카드용) */
+    --tone-resonance-bg-solid: #333028;
+    --tone-friction-bg-solid: #362929;
+    --tone-question-bg-solid: #2a3135;
+
   }
 }

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px;
+      font-family: -apple-system, 'Pretendard', sans-serif;
+      background: #faf9f7;
+      color: #2c2c2c;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #b8956a;
+      margin-bottom: 12px;
+    }
+    .field { margin-bottom: 10px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: #999;
+      margin-bottom: 3px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 60px;
+      border: 1px solid #e0dcd6;
+      border-radius: 5px;
+      padding: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      background: #fff;
+    }
+    textarea:focus { outline: none; border-color: #b8956a; }
+    .source {
+      font-size: 11px;
+      color: #999;
+      word-break: break-all;
+      background: #f5f3ef;
+      padding: 4px 6px;
+      border-radius: 3px;
+      max-height: 36px;
+      overflow: hidden;
+    }
+    .row { display: flex; gap: 5px; }
+    .tension-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid #e0dcd6;
+      background: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tension-dot.is-active {
+      border-color: #b8956a;
+      background: #b8956a;
+      color: #fff;
+    }
+    .tone-btn {
+      flex: 1;
+      padding: 6px 2px;
+      border: 2px solid #e0dcd6;
+      border-radius: 5px;
+      background: #fff;
+      font-size: 11px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tone-btn.is-active { font-weight: 600; }
+    .tone-btn[data-tone="positive"].is-active { border-color: #b8956a; background: #faf5ef; }
+    .tone-btn[data-tone="critic"].is-active { border-color: #c26b6b; background: #faf0f0; }
+    .tone-btn[data-tone="hold"].is-active { border-color: #6ba3c2; background: #f0f5fa; }
+    .actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+    }
+    .btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .btn--cancel { background: #e0dcd6; color: #666; }
+    .btn--save { background: #b8956a; color: #fff; font-weight: 600; }
+    .btn--save:disabled { opacity: 0.5; cursor: default; }
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      text-align: center;
+      display: none;
+    }
+    .status--ok { color: #4a7a3a; }
+    .status--err { color: #c26b6b; }
+    .status--offline {
+      display: block;
+      color: #c26b6b;
+      background: #faf0f0;
+      padding: 8px;
+      border-radius: 5px;
+      text-align: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div id="offlineMsg" class="status--offline" style="display:none">
+    Cannot connect to server (localhost:3001)
+  </div>
+
+  <div id="mainForm">
+    <h1>Catch</h1>
+
+    <div class="field">
+      <label>Text</label>
+      <textarea id="textInput" placeholder="A thought or sentence to catch..."></textarea>
+    </div>
+
+    <div class="field" id="sourceField" style="display:none">
+      <label>Source</label>
+      <div class="source" id="sourceDisplay"></div>
+    </div>
+
+    <div class="field">
+      <label>Sensitivity</label>
+      <div class="row" id="tensionRow">
+        <button class="tension-dot" data-t="1">1</button>
+        <button class="tension-dot" data-t="2">2</button>
+        <button class="tension-dot is-active" data-t="3">3</button>
+        <button class="tension-dot" data-t="4">4</button>
+        <button class="tension-dot" data-t="5">5</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tone <span style="color:#999;font-weight:normal">(optional)</span></label>
+      <div class="row" id="toneRow">
+        <button class="tone-btn is-active" data-tone="positive">Positive</button>
+        <button class="tone-btn" data-tone="critic">Critic</button>
+        <button class="tone-btn" data-tone="hold">Hold</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--cancel" id="cancelBtn">Cancel</button>
+      <button class="btn btn--save" id="saveBtn">Catch</button>
+    </div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

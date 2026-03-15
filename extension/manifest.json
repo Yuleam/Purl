@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Purl — Catch",
+  "version": "1.0.0",
+  "description": "Select text on any webpage and right-click to catch a piece.",
+  "permissions": ["contextMenus", "activeTab", "storage", "scripting", "tabs"],
+  "host_permissions": ["http://localhost:3001/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Catch a piece"
+  }
+}

@@ -1,9 +1,9 @@
 /**
- * Hint Service — 하이브리드 스코어링 기반 유사 올 찾기
+ * Hint Service — 하이브리드 스코어링 기반 유사 조각 찾기
  *
  * 3가지 신호:
  *   1. 임베딩 유사도 — 표면적 의미 비교 (바닥 깔개)
- *   2. 그래프 근접도 — 사용자의 엮기 패턴 (2-hop, 공통 이웃)
+ *   2. 그래프 근접도 — 사용자의 연결 패턴 (2-hop, 공통 이웃)
  *   3. 답글 의미 유사도 — 사용자의 해석이 연결 신호
  *
  * 적응형 가중치 (코잡기 → 뜨개질 전환):
@@ -12,24 +12,21 @@
  */
 
 const { embed, cosineSimilarity, isReady } = require('./embedder');
-const { getDB, persist, rowsToObjects } = require('../db');
+const { getDB, persist, getOne, getAll } = require('../db');
 
 // ─── 임베딩 인메모리 캐시 ───
-// DB에서 매번 JSON.parse 하는 비용을 줄이기 위해 파싱된 벡터를 메모리에 캐싱
 const embeddingCache = new Map();  // fiber_id -> number[]
 let cacheLoaded = false;
 
 function _loadCache() {
   if (cacheLoaded) return;
-  const db = getDB();
-  if (!db) return;
-  const rows = rowsToObjects(
-    db.exec('SELECT fiber_id, embedding FROM fiber_embeddings')
-  );
-  for (const row of rows) {
-    embeddingCache.set(row.fiber_id, JSON.parse(row.embedding));
-  }
-  cacheLoaded = true;
+  try {
+    const rows = getAll('SELECT fiber_id, embedding FROM fiber_embeddings', []);
+    for (const row of rows) {
+      embeddingCache.set(row.fiber_id, JSON.parse(row.embedding));
+    }
+    cacheLoaded = true;
+  } catch (e) {}
 }
 
 function _getCachedEmbedding(fiberId) {
@@ -86,21 +83,19 @@ function deleteReplyEmbedding(replyId) {
 // ─── 그래프 근접도 ───
 
 /**
- * 올의 stitch 이웃 집합을 반환
+ * 조각의 연결(link) 이웃 집합을 반환
+ * 같은 연결에 속한 다른 조각들이 이웃
  */
 function getNeighbors(fiberId) {
-  const db = getDB();
-  const rows = rowsToObjects(
-    db.exec(
-      `SELECT fiber_a_id, fiber_b_id FROM stitches
-       WHERE fiber_a_id = ? OR fiber_b_id = ?`,
-      [fiberId, fiberId]
-    )
-  );
+  const linkIds = getAll('SELECT link_id FROM link_members WHERE fiber_id = ?', [fiberId])
+    .map(r => r.link_id);
+
   const neighbors = new Set();
-  for (const row of rows) {
-    if (row.fiber_a_id !== fiberId) neighbors.add(row.fiber_a_id);
-    if (row.fiber_b_id !== fiberId) neighbors.add(row.fiber_b_id);
+  for (const lid of linkIds) {
+    const fiberIds = getAll('SELECT fiber_id FROM link_members WHERE link_id = ?', [lid]);
+    for (const row of fiberIds) {
+      if (row.fiber_id !== fiberId) neighbors.add(row.fiber_id);
+    }
   }
   return neighbors;
 }
@@ -142,17 +137,14 @@ function calcGraphScore(targetId, candidateId, targetNeighbors) {
 // ─── 답글 유사도 ───
 
 /**
- * 특정 올의 답글 임베딩 목록을 반환
+ * 특정 조각의 답글 임베딩 목록을 반환
  */
 function getReplyEmbeddings(fiberId) {
-  const db = getDB();
-  const rows = rowsToObjects(
-    db.exec(
-      `SELECT re.embedding FROM reply_embeddings re
-       JOIN fiber_replies fr ON re.reply_id = fr.id
-       WHERE fr.fiber_id = ?`,
-      [fiberId]
-    )
+  const rows = getAll(
+    `SELECT re.embedding FROM reply_embeddings re
+     JOIN fiber_replies fr ON re.reply_id = fr.id
+     WHERE fr.fiber_id = ?`,
+    [fiberId]
   );
   return rows.map(r => JSON.parse(r.embedding));
 }
@@ -172,13 +164,11 @@ function calcReplyScore(targetVec, candidateVec, targetId, candidateId) {
 
   let maxScore = 0;
 
-  // target 임베딩 vs candidate 답글들
   for (const replyVec of candidateReplies) {
     const s = cosineSimilarity(targetVec, replyVec);
     if (s > maxScore) maxScore = s;
   }
 
-  // candidate 임베딩 vs target 답글들
   for (const replyVec of targetReplies) {
     const s = cosineSimilarity(candidateVec, replyVec);
     if (s > maxScore) maxScore = s;
@@ -191,30 +181,22 @@ function calcReplyScore(targetVec, candidateVec, targetId, candidateId) {
 
 /**
  * 현재 단계의 가중치 반환
- * density = stitch 수 / fiber 수
+ * density = 연결(link) 수 / 조각(fiber) 수
  * - < 1.0: 코잡기 단계 (임베딩 중심)
  * - 1.0~2.0: 전환 구간 (선형 보간)
  * - ≥ 2.0: 뜨개질 단계 (그래프 중심)
  */
 function getWeights() {
-  const db = getDB();
-
-  const fiberCount = rowsToObjects(
-    db.exec('SELECT COUNT(*) as cnt FROM fibers')
-  )[0]?.cnt || 0;
-  const stitchCount = rowsToObjects(
-    db.exec('SELECT COUNT(*) as cnt FROM stitches')
-  )[0]?.cnt || 0;
+  const fiberCount = (getAll('SELECT COUNT(*) as cnt FROM fibers', [])[0]?.cnt) || 0;
+  const linkCount = (getAll('SELECT COUNT(*) as cnt FROM links', [])[0]?.cnt) || 0;
 
   if (fiberCount === 0) {
     return { embedding: 0.8, graph: 0.1, reply: 0.1, phase: 'casting-on', density: 0 };
   }
 
-  const density = stitchCount / fiberCount;
+  const density = linkCount / fiberCount;
 
-  // 코잡기 단계
   const castOn = { embedding: 0.8, graph: 0.1, reply: 0.1 };
-  // 뜨개질 단계
   const knitting = { embedding: 0.3, graph: 0.5, reply: 0.2 };
 
   if (density < 1.0) {
@@ -225,7 +207,7 @@ function getWeights() {
   }
 
   // 전환 구간: 선형 보간
-  const t = (density - 1.0) / (2.0 - 1.0); // 0~1
+  const t = (density - 1.0) / (2.0 - 1.0);
   return {
     embedding: castOn.embedding + t * (knitting.embedding - castOn.embedding),
     graph: castOn.graph + t * (knitting.graph - castOn.graph),
@@ -237,51 +219,69 @@ function getWeights() {
 
 // ─── 결 대비 ───
 
-const TONE_BOOST = 0.15; // 최대 15% 부스팅
+const TONE_BOOST = 0.15;
 
-/**
- * 두 결 사이의 대비 점수 (0~1)
- * 공명↔마찰 = 1.0, 물음+어느결 = 0.5, 같은 결 = 0
- */
 function _toneContrast(toneA, toneB) {
   if (!toneA || !toneB || toneA === toneB) return 0;
-  if ((toneA === 'resonance' && toneB === 'friction') ||
-      (toneA === 'friction' && toneB === 'resonance')) return 1.0;
-  return 0.5; // question + 어느 결이든
+  if ((toneA === 'positive' && toneB === 'critic') ||
+      (toneA === 'critic' && toneB === 'positive')) return 1.0;
+  return 0.5;
 }
 
-// ─── 하이브리드 유사 올 찾기 ───
+// ─── 힌트 간 클러스터링 ───
 
-/**
- * 유사 올 찾기 (하이브리드 스코어링)
- * @param {string} targetId
- * @returns {object[]} 유사 올 목록 (상위 5개, 각 신호 점수 포함)
- */
+const CLUSTER_THRESHOLD = 0.5;
+
+function _assignClusters(hintIds, cacheMap) {
+  if (!hintIds.length) return { clusters: {}, count: 0 };
+
+  const parent = {};
+  hintIds.forEach(id => { parent[id] = id; });
+  function find(x) {
+    while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; }
+    return x;
+  }
+  function union(a, b) { parent[find(a)] = find(b); }
+
+  for (let i = 0; i < hintIds.length; i++) {
+    for (let j = i + 1; j < hintIds.length; j++) {
+      const vecA = cacheMap.get(hintIds[i]);
+      const vecB = cacheMap.get(hintIds[j]);
+      if (vecA && vecB && cosineSimilarity(vecA, vecB) > CLUSTER_THRESHOLD) {
+        union(hintIds[i], hintIds[j]);
+      }
+    }
+  }
+
+  const rootToCluster = {};
+  let nextCluster = 0;
+  const clusters = {};
+  hintIds.forEach(id => {
+    const root = find(id);
+    if (!(root in rootToCluster)) rootToCluster[root] = nextCluster++;
+    clusters[id] = rootToCluster[root];
+  });
+  return { clusters, count: nextCluster };
+}
+
+// ─── 하이브리드 유사 조각 찾기 ───
+
 function findSimilarFibers(targetId) {
-  const db = getDB();
-
-  // 캐시에서 대상 임베딩 조회
   const targetVec = _getCachedEmbedding(targetId);
   if (!targetVec) return { hints: [], phase: 'casting-on', density: 0 };
 
-  // 캐시에서 모든 임베딩 조회 (대상 제외)
   const allEmbeddings = _getAllCachedEmbeddings();
   if (allEmbeddings.size <= 1) return { hints: [], phase: 'casting-on', density: 0 };
 
-  // 가중치
   const weights = getWeights();
   const threshold = weights.phase === 'knitting' ? 0.3 : 0.25;
-
-  // target의 이웃 (그래프 점수용, 한 번만 계산)
   const targetNeighbors = getNeighbors(targetId);
 
-  // 결 대비용: 모든 fiber의 tone 미리 조회
-  const toneRows = rowsToObjects(db.exec('SELECT id, tone FROM fibers'));
+  const toneRows = getAll('SELECT id, tone FROM fibers', []);
   const toneMap = {};
-  toneRows.forEach(r => { toneMap[r.id] = r.tone || 'resonance'; });
-  const targetTone = toneMap[targetId] || 'resonance';
+  toneRows.forEach(r => { toneMap[r.id] = r.tone || 'positive'; });
+  const targetTone = toneMap[targetId] || 'positive';
 
-  // 하이브리드 점수 계산
   const scored = [];
   for (const [fiberId, candidateVec] of allEmbeddings) {
     if (fiberId === targetId) continue;
@@ -294,7 +294,6 @@ function findSimilarFibers(targetId) {
       + weights.graph * graphScore
       + weights.reply * replyScore;
 
-    // 결 대비 보너스
     const contrast = _toneContrast(targetTone, toneMap[fiberId]);
     const boosted = hybrid * (1 + TONE_BOOST * contrast);
 
@@ -317,45 +316,46 @@ function findSimilarFibers(targetId) {
 
   if (!top.length) return { hints: [], phase: weights.phase, density: weights.density };
 
-  // 올 상세 정보 조회
   const ids = top.map(s => s.fiber_id);
   const placeholders = ids.map(() => '?').join(',');
-  const fibers = rowsToObjects(
-    db.exec(`SELECT * FROM fibers WHERE id IN (${placeholders})`, ids)
-  );
+  const fibers = getAll(`SELECT * FROM fibers WHERE id IN (${placeholders})`, ids);
 
   const fiberMap = {};
   fibers.forEach(f => { fiberMap[f.id] = f; });
+
+  const clusterIds = ids.filter(id => embeddingCache.has(id));
+  const { clusters, count: clusterCount } = _assignClusters(clusterIds, embeddingCache);
 
   const hints = top
     .filter(s => fiberMap[s.fiber_id])
     .map(s => ({
       ...fiberMap[s.fiber_id],
       similarity: Math.round(s.score * 100),
-      signals: s.signals
+      signals: s.signals,
+      cluster_id: clusters[s.fiber_id] != null ? clusters[s.fiber_id] : 0
     }));
 
-  return { hints, phase: weights.phase, density: weights.density };
+  return { hints, cluster_count: clusterCount || 1, phase: weights.phase, density: weights.density };
 }
 
 // ─── 일괄 처리 ───
 
 async function backfillEmbeddings() {
   if (!isReady()) return;
-  const db = getDB();
 
-  const fibers = rowsToObjects(
-    db.exec(`SELECT f.id, f.text, f.thought FROM fibers f
-             LEFT JOIN fiber_embeddings e ON f.id = e.fiber_id
-             WHERE e.fiber_id IS NULL`)
+  const fibers = getAll(
+    `SELECT f.id, f.text, f.thought FROM fibers f
+     LEFT JOIN fiber_embeddings e ON f.id = e.fiber_id
+     WHERE e.fiber_id IS NULL`,
+    []
   );
 
   if (!fibers.length) {
-    console.log('[hint] 모든 올에 임베딩이 있습니다.');
+    console.log('[hint] 모든 조각에 임베딩이 있습니다.');
     return;
   }
 
-  console.log(`[hint] 임베딩 없는 올 ${fibers.length}개 처리 시작...`);
+  console.log(`[hint] 임베딩 없는 조각 ${fibers.length}개 처리 시작...`);
   for (const f of fibers) {
     await saveEmbedding(f.id, f.text, f.thought);
   }
@@ -364,12 +364,12 @@ async function backfillEmbeddings() {
 
 async function backfillReplyEmbeddings() {
   if (!isReady()) return;
-  const db = getDB();
 
-  const replies = rowsToObjects(
-    db.exec(`SELECT fr.id, fr.note FROM fiber_replies fr
-             LEFT JOIN reply_embeddings re ON fr.id = re.reply_id
-             WHERE re.reply_id IS NULL`)
+  const replies = getAll(
+    `SELECT fr.id, fr.note FROM fiber_replies fr
+     LEFT JOIN reply_embeddings re ON fr.id = re.reply_id
+     WHERE re.reply_id IS NULL`,
+    []
   );
 
   if (!replies.length) {

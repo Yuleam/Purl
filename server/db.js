@@ -1,35 +1,48 @@
 /**
- * SQLite Database Setup (sql.js — WebAssembly, no native deps)
+ * SQLite Database Setup (better-sqlite3 — 동기 API, 파일 직접 저장)
  */
-const initSqlJs = require('sql.js');
+const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 
 const DB_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DB_DIR, 'knitting.db');
 
-let db = null;
+let _db = null;
+
+// 라우트에서 getDB().run(sql, params) 패턴 호환용 래퍼
+const dbProxy = {
+  run(sql, params) {
+    const args = Array.isArray(params) ? params : (params !== undefined ? [params] : []);
+    return _db.prepare(sql).run(...args);
+  }
+};
 
 function generateId(prefix) {
   return (prefix || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
 }
 
-async function initDB() {
-  const SQL = await initSqlJs();
-
+function initDB() {
   if (!fs.existsSync(DB_DIR)) {
     fs.mkdirSync(DB_DIR, { recursive: true });
   }
 
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(buffer);
-  } else {
-    db = new SQL.Database();
-  }
+  _db = new Database(DB_PATH);
+  _db.pragma('journal_mode = WAL');
+  _db.pragma('foreign_keys = ON');
 
-  db.run(`CREATE TABLE IF NOT EXISTS fibers (
+  // ─── 사용자 ───
+  _db.exec(`CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  )`);
+
+  // ─── 조각 ───
+  _db.exec(`CREATE TABLE IF NOT EXISTS fibers (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL DEFAULT '',
     text TEXT NOT NULL,
     source TEXT DEFAULT '',
     source_note_id TEXT DEFAULT '',
@@ -37,106 +50,101 @@ async function initDB() {
     tension INTEGER DEFAULT 3 CHECK(tension BETWEEN 1 AND 5),
     thought TEXT DEFAULT '',
     caught_at INTEGER NOT NULL,
-    spun_at INTEGER
+    spun_at INTEGER,
+    source_range TEXT DEFAULT NULL,
+    tone TEXT DEFAULT 'positive'
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS stitches (
-    id TEXT PRIMARY KEY,
-    fiber_a_id TEXT NOT NULL,
-    fiber_b_id TEXT NOT NULL,
-    why TEXT DEFAULT '',
-    created_at INTEGER NOT NULL
-  )`);
+  // 구 DB 마이그레이션
+  try { _db.exec(`ALTER TABLE fibers ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`); } catch (e) {}
+  try { _db.exec(`ALTER TABLE fibers ADD COLUMN source_range TEXT DEFAULT NULL`); } catch (e) {}
+  try { _db.exec(`ALTER TABLE fibers ADD COLUMN tone TEXT DEFAULT 'positive'`); } catch (e) {}
 
-  // Migration: add source_range column to fibers
+  // tone 값 마이그레이션: resonance/friction/question → positive/critic/hold
   try {
-    db.run(`ALTER TABLE fibers ADD COLUMN source_range TEXT DEFAULT NULL`);
-  } catch (e) {
-    // Column already exists, ignore
-  }
+    _db.exec(`UPDATE fibers SET tone = 'positive' WHERE tone = 'resonance'`);
+    _db.exec(`UPDATE fibers SET tone = 'critic' WHERE tone = 'friction'`);
+    _db.exec(`UPDATE fibers SET tone = 'hold' WHERE tone = 'question'`);
+  } catch (e) {}
 
-  // Migration: add tone column to fibers (결: resonance | friction | question)
-  try {
-    db.run(`ALTER TABLE fibers ADD COLUMN tone TEXT DEFAULT 'resonance'`);
-  } catch (e) {
-    // Column already exists, ignore
-  }
-
-  db.run(`CREATE TABLE IF NOT EXISTS fiber_replies (
+  _db.exec(`CREATE TABLE IF NOT EXISTS fiber_replies (
     id TEXT PRIMARY KEY,
     fiber_id TEXT NOT NULL,
     note TEXT NOT NULL,
     created_at INTEGER NOT NULL
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS fiber_embeddings (
+  _db.exec(`CREATE TABLE IF NOT EXISTS fiber_embeddings (
     fiber_id TEXT PRIMARY KEY,
     embedding TEXT NOT NULL
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS reply_embeddings (
+  _db.exec(`CREATE TABLE IF NOT EXISTS reply_embeddings (
     reply_id TEXT PRIMARY KEY,
     embedding TEXT NOT NULL
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS knots (
+  // ─── 연결 ───
+  _db.exec(`CREATE TABLE IF NOT EXISTS links (
     id TEXT PRIMARY KEY,
-    insight TEXT NOT NULL,
+    user_id TEXT NOT NULL DEFAULT '',
+    why TEXT DEFAULT '',
     created_at INTEGER NOT NULL
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS knot_stitches (
-    knot_id TEXT NOT NULL,
-    stitch_id TEXT NOT NULL,
-    PRIMARY KEY (knot_id, stitch_id)
+  try { _db.exec(`ALTER TABLE links ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`); } catch (e) {}
+
+  _db.exec(`CREATE TABLE IF NOT EXISTS link_members (
+    link_id TEXT NOT NULL,
+    fiber_id TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    PRIMARY KEY (link_id, fiber_id)
   )`);
 
-  db.run(`CREATE TABLE IF NOT EXISTS notes (
+  // ─── 만남 기록 ───
+  _db.exec(`CREATE TABLE IF NOT EXISTS encounters (
     id TEXT PRIMARY KEY,
-    type TEXT DEFAULT 'blank',
-    title TEXT DEFAULT '',
-    content TEXT DEFAULT '',
-    html_content TEXT DEFAULT '',
-    answers TEXT DEFAULT NULL,
-    bookshelf_id TEXT DEFAULT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
+    user_id TEXT NOT NULL DEFAULT '',
+    fiber_id TEXT NOT NULL,
+    encountered_at INTEGER NOT NULL
   )`);
 
-  persist();
-  return db;
+  try { _db.exec(`ALTER TABLE encounters ADD COLUMN user_id TEXT NOT NULL DEFAULT ''`); } catch (e) {}
+
+  // ─── 레거시 테이블 (하위 호환성) ───
+  _db.exec(`CREATE TABLE IF NOT EXISTS knots (id TEXT PRIMARY KEY, insight TEXT NOT NULL, created_at INTEGER NOT NULL)`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS knot_stitches (knot_id TEXT NOT NULL, stitch_id TEXT NOT NULL, PRIMARY KEY (knot_id, stitch_id))`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS threads (id TEXT PRIMARY KEY, why TEXT DEFAULT '', created_at INTEGER NOT NULL)`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS thread_fibers (thread_id TEXT NOT NULL, fiber_id TEXT NOT NULL, PRIMARY KEY (thread_id, fiber_id))`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS stitches (id TEXT PRIMARY KEY, why TEXT DEFAULT '', created_at INTEGER NOT NULL)`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS stitch_members (stitch_id TEXT NOT NULL, member_type TEXT NOT NULL, member_id TEXT NOT NULL, PRIMARY KEY (stitch_id, member_type, member_id))`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS fabrics (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT DEFAULT '', created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS fabric_members (fabric_id TEXT NOT NULL, member_type TEXT NOT NULL, member_id TEXT NOT NULL, PRIMARY KEY (fabric_id, member_type, member_id))`);
+  _db.exec(`CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, type TEXT DEFAULT 'blank', title TEXT DEFAULT '', content TEXT DEFAULT '', html_content TEXT DEFAULT '', answers TEXT DEFAULT NULL, bookshelf_id TEXT DEFAULT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`);
+
+  return _db;
 }
 
-function persist() {
-  if (!db) return;
-  const data = db.export();
-  const buffer = Buffer.from(data);
-  const tmpPath = DB_PATH + '.tmp';
-  fs.writeFileSync(tmpPath, buffer);
-  fs.renameSync(tmpPath, DB_PATH);
-}
+// better-sqlite3는 파일에 자동 저장 — persist()는 하위 호환성용 no-op
+function persist() {}
 
 function getDB() {
-  return db;
-}
-
-function rowsToObjects(result) {
-  if (!result || !result.length) return [];
-  const stmt = result[0];
-  return stmt.values.map(row => {
-    const obj = {};
-    stmt.columns.forEach((col, i) => { obj[col] = row[i]; });
-    return obj;
-  });
+  return dbProxy;
 }
 
 function getOne(sql, params) {
-  const rows = rowsToObjects(getDB().exec(sql, params));
-  return rows.length ? rows[0] : null;
+  const args = Array.isArray(params) ? params : (params !== undefined ? [params] : []);
+  return _db.prepare(sql).get(...args) || null;
 }
 
 function getAll(sql, params) {
-  return rowsToObjects(getDB().exec(sql, params));
+  const args = Array.isArray(params) ? params : (params !== undefined ? [params] : []);
+  return _db.prepare(sql).all(...args);
+}
+
+// 하위 호환성용 (periphery.js 등 직접 호출 코드 지원)
+function rowsToObjects(rows) {
+  return rows || [];
 }
 
 module.exports = { initDB, getDB, persist, generateId, rowsToObjects, getOne, getAll };

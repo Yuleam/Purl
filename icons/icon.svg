@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#faf9f7"/>
+  <g transform="translate(256,256)">
+    <!-- 뜨개질 바늘 두 개가 교차하는 형태 -->
+    <line x1="-120" y1="120" x2="120" y2="-120" stroke="#b8956a" stroke-width="24" stroke-linecap="round"/>
+    <line x1="-120" y1="-120" x2="120" y2="120" stroke="#a6834f" stroke-width="24" stroke-linecap="round"/>
+    <!-- 실 (올) 곡선 -->
+    <path d="M-80,0 Q-40,-60 0,0 Q40,60 80,0" fill="none" stroke="#b8956a" stroke-width="16" stroke-linecap="round"/>
+    <path d="M-60,40 Q0,-20 60,40" fill="none" stroke="#d4a574" stroke-width="12" stroke-linecap="round"/>
+    <!-- 중심 매듭 -->
+    <circle cx="0" cy="0" r="16" fill="#b8956a"/>
+  </g>
+</svg>

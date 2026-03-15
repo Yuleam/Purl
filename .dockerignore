@@ -1,0 +1,12 @@
+node_modules/
+server/node_modules/
+server/data/
+server/models/
+.git/
+.obsidian/
+.claude/
+.vscode/
+legacy/
+extension/
+*.log
+*.md

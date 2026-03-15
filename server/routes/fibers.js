@@ -1,5 +1,5 @@
 /**
- * Fiber Routes — 올/실 CRUD + 힌트 조회
+ * Fiber Routes — 조각 CRUD
  */
 const express = require('express');
 const router = express.Router();
@@ -12,7 +12,7 @@ function _parseSourceRange(fiber) {
   }
 }
 
-// POST /api/fibers — 올 잡기
+// POST /api/fibers — 조각 잡기
 router.post('/', (req, res) => {
   try {
     const { text, source, source_note_id, source_note_title, tension, source_range, tone } = req.body;
@@ -21,23 +21,23 @@ router.post('/', (req, res) => {
     }
     const id = generateId('fb');
     const t = Math.max(1, Math.min(5, parseInt(tension) || 3));
-    const validTones = ['resonance', 'friction', 'question'];
-    const safeTone = validTones.includes(tone) ? tone : 'resonance';
+    const validTones = ['positive', 'critic', 'hold'];
+    const safeTone = validTones.includes(tone) ? tone : 'positive';
     const now = Date.now();
 
     getDB().run(
-      `INSERT INTO fibers (id, text, source, source_note_id, source_note_title, tension, caught_at, source_range, tone)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, text.trim(), source || '', source_note_id || '', source_note_title || '', t, now,
+      `INSERT INTO fibers (id, user_id, text, source, source_note_id, source_note_title, tension, caught_at, source_range, tone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, req.user.id, text.trim(), source || '', source_note_id || '', source_note_title || '', t, now,
        source_range ? JSON.stringify(source_range) : null, safeTone]
     );
     persist();
 
-    const fiber = getOne('SELECT * FROM fibers WHERE id = ?', [id]);
+    const fiber = getOne('SELECT * FROM fibers WHERE id = ? AND user_id = ?', [id, req.user.id]);
     _parseSourceRange(fiber);
     res.status(201).json(fiber);
 
-    // 비동기로 임베딩 생성 (응답 후 처리)
+    // 비동기로 임베딩 생성
     saveEmbedding(id, text.trim(), '').catch(err =>
       console.error('[embedding] 생성 실패:', err.message)
     );
@@ -47,7 +47,7 @@ router.post('/', (req, res) => {
   }
 });
 
-// GET /api/fibers — 바구니 목록
+// GET /api/fibers — 조각 목록
 router.get('/', (req, res) => {
   try {
     const sort = req.query.sort || 'caught_at';
@@ -59,10 +59,19 @@ router.get('/', (req, res) => {
     const sortCol = validSorts.includes(sort) ? sort : 'caught_at';
     const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    const fibers = getAll(
-      `SELECT * FROM fibers ORDER BY ${sortCol} ${sortOrder} LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
+    const search = (req.query.search || '').trim();
+    let fibers;
+    if (search) {
+      fibers = getAll(
+        `SELECT * FROM fibers WHERE user_id = ? AND (text LIKE ? OR thought LIKE ? OR source LIKE ?) ORDER BY ${sortCol} ${sortOrder} LIMIT ? OFFSET ?`,
+        [req.user.id, '%' + search + '%', '%' + search + '%', '%' + search + '%', limit, offset]
+      );
+    } else {
+      fibers = getAll(
+        `SELECT * FROM fibers WHERE user_id = ? ORDER BY ${sortCol} ${sortOrder} LIMIT ? OFFSET ?`,
+        [req.user.id, limit, offset]
+      );
+    }
     fibers.forEach(_parseSourceRange);
     res.json(fibers);
   } catch (err) {
@@ -71,10 +80,10 @@ router.get('/', (req, res) => {
   }
 });
 
-// GET /api/fibers/:id — 올/실 상세
+// GET /api/fibers/:id — 조각 상세
 router.get('/:id', (req, res) => {
   try {
-    const fiber = getOne('SELECT * FROM fibers WHERE id = ?', [req.params.id]);
+    const fiber = getOne('SELECT * FROM fibers WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     if (!fiber) return res.status(404).json({ error: 'Not found' });
     _parseSourceRange(fiber);
     res.json(fiber);
@@ -84,10 +93,10 @@ router.get('/:id', (req, res) => {
   }
 });
 
-// PATCH /api/fibers/:id — 실 잣기 (생각 추가), 장력 변경
+// PATCH /api/fibers/:id — 수정
 router.patch('/:id', (req, res) => {
   try {
-    const fiber = getOne('SELECT * FROM fibers WHERE id = ?', [req.params.id]);
+    const fiber = getOne('SELECT * FROM fibers WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     if (!fiber) return res.status(404).json({ error: 'Not found' });
 
     const updates = [];
@@ -114,7 +123,7 @@ router.patch('/:id', (req, res) => {
     }
 
     if (req.body.tone !== undefined) {
-      const validTones = ['resonance', 'friction', 'question'];
+      const validTones = ['positive', 'critic', 'hold'];
       if (validTones.includes(req.body.tone)) {
         updates.push('tone = ?');
         params.push(req.body.tone);
@@ -125,15 +134,14 @@ router.patch('/:id', (req, res) => {
       return res.json(fiber);
     }
 
-    params.push(req.params.id);
-    getDB().run(`UPDATE fibers SET ${updates.join(', ')} WHERE id = ?`, params);
+    params.push(req.params.id, req.user.id);
+    getDB().run(`UPDATE fibers SET ${updates.join(', ')} WHERE id = ? AND user_id = ?`, params);
     persist();
 
-    const updated = getOne('SELECT * FROM fibers WHERE id = ?', [req.params.id]);
+    const updated = getOne('SELECT * FROM fibers WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     _parseSourceRange(updated);
     res.json(updated);
 
-    // thought 변경 시 임베딩 재생성
     if (req.body.thought !== undefined) {
       saveEmbedding(req.params.id, updated.text, updated.thought).catch(err =>
         console.error('[embedding] 갱신 실패:', err.message)
@@ -148,26 +156,17 @@ router.patch('/:id', (req, res) => {
 // DELETE /api/fibers/:id
 router.delete('/:id', (req, res) => {
   try {
-    const fiber = getOne('SELECT * FROM fibers WHERE id = ?', [req.params.id]);
+    const fiber = getOne('SELECT * FROM fibers WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     if (!fiber) return res.status(404).json({ error: 'Not found' });
 
-    // 답글 임베딩 먼저 삭제 (fiber_replies 참조 필요)
     const replies = getAll('SELECT id FROM fiber_replies WHERE fiber_id = ?', [req.params.id]);
     for (const r of replies) {
       deleteReplyEmbedding(r.id);
     }
     getDB().run('DELETE FROM fiber_replies WHERE fiber_id = ?', [req.params.id]);
-    // 관련 stitch의 knot_stitches 먼저 정리
-    const relatedStitches = getAll(
-      'SELECT id FROM stitches WHERE fiber_a_id = ? OR fiber_b_id = ?',
-      [req.params.id, req.params.id]
-    );
-    for (const s of relatedStitches) {
-      getDB().run('DELETE FROM knot_stitches WHERE stitch_id = ?', [s.id]);
-    }
-    getDB().run('DELETE FROM stitches WHERE fiber_a_id = ? OR fiber_b_id = ?', [req.params.id, req.params.id]);
+    getDB().run('DELETE FROM link_members WHERE fiber_id = ?', [req.params.id]);
     deleteEmbedding(req.params.id);
-    getDB().run('DELETE FROM fibers WHERE id = ?', [req.params.id]);
+    getDB().run('DELETE FROM fibers WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     persist();
 
     res.status(204).end();
@@ -177,10 +176,10 @@ router.delete('/:id', (req, res) => {
   }
 });
 
-// GET /api/fibers/:id/hints — 유사 올 조회 (하이브리드 스코어링)
+// GET /api/fibers/:id/hints — 유사 조각 조회
 router.get('/:id/hints', (req, res) => {
   try {
-    const result = findSimilarFibers(req.params.id);
+    const result = findSimilarFibers(req.params.id, req.user.id);
     res.json(result);
   } catch (err) {
     console.error('GET /api/fibers/:id/hints error:', err);
@@ -191,7 +190,7 @@ router.get('/:id/hints', (req, res) => {
 // POST /api/fibers/:id/replies — 답글 생성
 router.post('/:id/replies', (req, res) => {
   try {
-    const fiber = getOne('SELECT * FROM fibers WHERE id = ?', [req.params.id]);
+    const fiber = getOne('SELECT * FROM fibers WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
     if (!fiber) return res.status(404).json({ error: 'Fiber not found' });
     const { note } = req.body;
     if (!note || !note.trim()) return res.status(400).json({ error: 'note is required' });
@@ -202,7 +201,6 @@ router.post('/:id/replies', (req, res) => {
     persist();
     res.status(201).json({ id, fiber_id: req.params.id, note: note.trim(), created_at: now });
 
-    // 비동기로 답글 임베딩 생성
     saveReplyEmbedding(id, note.trim()).catch(err =>
       console.error('[embedding] 답글 임베딩 생성 실패:', err.message)
     );
@@ -215,6 +213,8 @@ router.post('/:id/replies', (req, res) => {
 // GET /api/fibers/:id/replies — 답글 목록
 router.get('/:id/replies', (req, res) => {
   try {
+    const fiber = getOne('SELECT id FROM fibers WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+    if (!fiber) return res.status(404).json({ error: 'Not found' });
     const replies = getAll('SELECT * FROM fiber_replies WHERE fiber_id = ? ORDER BY created_at ASC', [req.params.id]);
     res.json(replies);
   } catch (err) {
@@ -226,6 +226,8 @@ router.get('/:id/replies', (req, res) => {
 // DELETE /api/fibers/:fid/replies/:rid — 답글 삭제
 router.delete('/:fid/replies/:rid', (req, res) => {
   try {
+    const fiber = getOne('SELECT id FROM fibers WHERE id = ? AND user_id = ?', [req.params.fid, req.user.id]);
+    if (!fiber) return res.status(404).json({ error: 'Not found' });
     deleteReplyEmbedding(req.params.rid);
     getDB().run('DELETE FROM fiber_replies WHERE id = ? AND fiber_id = ?', [req.params.rid, req.params.fid]);
     persist();
