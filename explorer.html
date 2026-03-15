@@ -10,24 +10,25 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <style>
     :root {
-      --bg: #faf9f7;
-      --bg-secondary: #f2f0ec;
-      --surface: #ffffff;
-      --surface-hover: #f7f6f3;
-      --border: #e8e5df;
-      --border-light: #f0eee9;
-      --text: #2c2c2c;
-      --text-secondary: #6b6b6b;
-      --text-muted: #a0a0a0;
-      --accent: #b8956a;
-      --accent-hover: #a6834f;
-      --accent-light: rgba(184, 149, 106, 0.1);
-      --accent-border: rgba(184, 149, 106, 0.3);
+      /* 밤하늘 (Night Sky) — 궤적 전용 */
+      --bg: #111318;
+      --bg-secondary: rgba(255,255,255,0.04);
+      --surface: rgba(255,255,255,0.03);
+      --surface-hover: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.06);
+      --border-light: rgba(255,255,255,0.03);
+      --text: #ccc9c4;
+      --text-secondary: #8a8884;
+      --text-muted: #5a5854;
+      --accent: #a89e94;
+      --accent-hover: #c4bab0;
+      --accent-light: rgba(168, 158, 148, 0.08);
+      --accent-border: rgba(168, 158, 148, 0.15);
       --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-serif: 'Gowun Batang', Georgia, serif;
       --tone-positive: #5a8a6a;
       --tone-critic: #c4644a;
-      --tone-hold: #7a7a7a;
+      --tone-hold: #8a8a8a;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -54,12 +55,14 @@
       border-bottom: 1px solid var(--border);
       gap: 12px;
       flex-shrink: 0;
+      background: var(--bg);
     }
     .app__title {
       font-family: var(--font-serif);
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: 0.02em;
     }
     .app__nav {
       display: flex;
@@ -75,14 +78,14 @@
       padding: 5px 14px;
       border-radius: 16px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
       text-decoration: none;
     }
-    .app__nav-btn:hover { border-color: var(--accent-border); color: var(--accent); }
+    .app__nav-btn:hover { border-color: var(--accent-border); color: var(--text); }
     .app__nav-btn.is-active {
-      background: var(--accent-light);
-      border-color: var(--accent-border);
-      color: var(--accent);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text);
     }
 
     .app__body {
@@ -125,12 +128,12 @@
       padding: 3px 12px;
       border-radius: 12px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .trail-panel__toggle-btn.is-active {
-      background: var(--accent-light);
-      border-color: var(--accent-border);
-      color: var(--accent);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+      color: var(--text);
     }
 
     .trail-panel__scroll {
@@ -171,31 +174,47 @@
       align-items: center;
     }
 
-    /* 점 */
+    /* 점 — 별빛 */
     .trail__dot {
       border-radius: 50%;
       cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform 0.2s, filter 0.2s;
       flex-shrink: 0;
+      position: relative;
+    }
+    .trail__dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: inherit;
+      opacity: 0.35;
+      filter: blur(4px);
+      z-index: -1;
+      pointer-events: none;
     }
     .trail__dot:hover {
       transform: scale(1.2);
-      box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.2);
+      filter: brightness(1.3);
     }
     .trail__dot.is-selected {
-      box-shadow: 0 0 0 3px var(--accent);
+      box-shadow: 0 0 0 2px var(--text), 0 0 8px 2px rgba(255,255,255,0.15);
+      filter: brightness(1.4);
     }
-    .trail__dot--s1 { width: 8px; height: 8px; }
-    .trail__dot--s2 { width: 12px; height: 12px; }
-    .trail__dot--s3 { width: 16px; height: 16px; }
-    .trail__dot--s4 { width: 20px; height: 20px; }
-    .trail__dot--s5 { width: 24px; height: 24px; }
+    .trail__dot--s1 { width: 6px; height: 6px; }
+    .trail__dot--s2 { width: 10px; height: 10px; }
+    .trail__dot--s3 { width: 14px; height: 14px; }
+    .trail__dot--s4 { width: 18px; height: 18px; }
+    .trail__dot--s5 { width: 22px; height: 22px; }
+    .trail__dot--s1::after { inset: -2px; filter: blur(3px); }
+    .trail__dot--s5::after { inset: -4px; filter: blur(6px); opacity: 0.3; }
 
     /* 요약 */
     .trail__summary {
       margin-top: 16px;
       padding: 12px;
       background: var(--bg-secondary);
+      border: 1px solid var(--border);
       border-radius: 10px;
       text-align: center;
       font-size: 0.8rem;
@@ -203,7 +222,7 @@
       line-height: 1.7;
     }
     .trail__summary-count {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--text);
     }
@@ -223,6 +242,7 @@
       height: 7px;
       border-radius: 50%;
       display: inline-block;
+      box-shadow: 0 0 4px 1px currentColor;
     }
 
     /* 빈 상태 */
@@ -261,19 +281,20 @@
       line-height: 1.6;
     }
 
-    /* 조각 카드 */
+    /* 조각 */
     .detail__card {
-      background: var(--surface);
-      border-left: 4px solid var(--accent);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      background: none;
+      border-left: none;
+      border-radius: 0;
+      padding: 0 0 20px;
+      box-shadow: none;
       margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
     }
     .detail__text {
       font-family: var(--font-serif);
-      font-size: 1.1rem;
-      line-height: 1.8;
+      font-size: 1.15rem;
+      line-height: 2.0;
       color: var(--text);
       margin-bottom: 14px;
     }
@@ -284,14 +305,16 @@
       margin-bottom: 10px;
     }
     .detail__tone {
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 400;
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      letter-spacing: 0.03em;
     }
-    .detail__tone--positive { background: rgba(90, 138, 106, 0.1); color: var(--tone-positive); }
-    .detail__tone--critic { background: rgba(196, 100, 74, 0.1); color: var(--tone-critic); }
-    .detail__tone--hold { background: rgba(122, 122, 122, 0.1); color: var(--tone-hold); }
+    .detail__tone--positive { color: var(--tone-positive); }
+    .detail__tone--critic { color: var(--tone-critic); }
+    .detail__tone--hold { color: var(--tone-hold); }
 
     .detail__sensitivity {
       flex: 1;
@@ -317,23 +340,24 @@
     }
 
     .detail__thought {
-      padding: 12px 0;
-      border-top: 1px solid var(--border-light);
+      padding: 14px 0;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-serif);
       font-size: 0.9rem;
       color: var(--text-secondary);
       font-style: italic;
-      line-height: 1.6;
+      line-height: 1.8;
     }
     .detail__source {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       padding-top: 8px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .detail__source a { color: var(--accent); text-decoration: none; }
-    .detail__source a:hover { text-decoration: underline; }
+    .detail__source a { color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border); }
+    .detail__source a:hover { color: var(--text); }
 
     .detail__time {
       font-size: 0.75rem;
@@ -364,17 +388,17 @@
     }
 
     .link-card {
-      padding: 14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 8px;
+      padding: 14px 0;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      margin-bottom: 0;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .link-card:hover {
-      background: var(--surface-hover);
-      border-color: var(--accent-border);
+      opacity: 0.7;
     }
     .link-card__why {
       font-size: 0.85rem;
@@ -396,10 +420,10 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    .anim-fade { animation: fadeIn 0.3s ease both; }
+    .anim-fade { animation: fadeIn 0.5s ease both; }
   </style>
 </head>
 <body>

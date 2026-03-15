@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#b8956a">
+  <meta name="theme-color" content="#f4f3f1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Purl">
@@ -16,24 +16,34 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <style>
     :root {
-      --bg: #faf9f7;
-      --bg-secondary: #f2f0ec;
-      --surface: #ffffff;
-      --surface-hover: #f7f6f3;
-      --border: #e8e5df;
-      --border-light: #f0eee9;
-      --text: #2c2c2c;
-      --text-secondary: #6b6b6b;
-      --text-muted: #a0a0a0;
-      --accent: #b8956a;
-      --accent-hover: #a6834f;
-      --accent-light: rgba(184, 149, 106, 0.1);
-      --accent-border: rgba(184, 149, 106, 0.3);
+      /* 안개 (Mist) — 기본 팔레트 */
+      --bg: #f4f3f1;
+      --bg-secondary: #eceae7;
+      --surface: transparent;
+      --surface-hover: rgba(0,0,0,0.015);
+      --border: rgba(0,0,0,0.06);
+      --border-light: rgba(0,0,0,0.03);
+      --text: #2a2a2a;
+      --text-secondary: #636363;
+      --text-muted: #9c9c9c;
+      --accent: #8f847a;
+      --accent-hover: #756b62;
+      --accent-light: rgba(143, 132, 122, 0.08);
+      --accent-border: rgba(143, 132, 122, 0.18);
       --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-serif: 'Gowun Batang', Georgia, serif;
       --tone-positive: #5a8a6a;
       --tone-critic: #c4644a;
-      --tone-hold: #7a7a7a;
+      --tone-hold: #8a8a8a;
+
+      /* 밤하늘 (Night Sky) — 궤적 전용 */
+      --night-bg: #111318;
+      --night-surface: rgba(255,255,255,0.04);
+      --night-text: #ccc9c4;
+      --night-text-secondary: #8a8884;
+      --night-text-muted: #5a5854;
+      --night-border: rgba(255,255,255,0.06);
+      --night-accent: #a89e94;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -51,7 +61,7 @@
     .view.is-active { display: flex; }
 
     .header {
-      padding: 16px 20px 12px;
+      padding: 14px 20px 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -62,9 +72,10 @@
     }
     .header__title {
       font-family: var(--font-serif);
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
     }
     .header__actions {
       display: flex;
@@ -74,14 +85,14 @@
       background: none;
       border: none;
       font-family: var(--font);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
       cursor: pointer;
       padding: 6px 12px;
       border-radius: 8px;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
-    .header__action:active { background: var(--accent-light); color: var(--accent); }
+    .header__action:active { color: var(--text-secondary); }
 
     .label {
       font-size: 0.75rem;
@@ -97,13 +108,14 @@
       width: 100%;
       min-height: 100px;
       padding: 16px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      font-family: var(--font);
-      font-size: 1rem;
-      line-height: 1.6;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      line-height: 1.8;
       color: var(--text);
-      background: var(--surface);
+      background: none;
       resize: none;
       outline: none;
       transition: border-color 0.2s;
@@ -114,12 +126,13 @@
     .capture__source {
       width: 100%;
       padding: 12px 16px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
       font-family: var(--font);
       font-size: 0.85rem;
       color: var(--text-secondary);
-      background: var(--surface);
+      background: none;
       outline: none;
       transition: border-color 0.2s;
     }
@@ -144,33 +157,33 @@
     }
     .sensitivity-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 24px;
-      height: 24px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: var(--accent);
-      border: 3px solid var(--surface);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      background: var(--text);
+      border: none;
+      box-shadow: none;
       cursor: pointer;
     }
     .sensitivity-value {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: var(--text-muted);
       min-width: 20px;
       text-align: center;
     }
 
     /* 방향성 버튼 */
-    .direction-row { display: flex; gap: 8px; }
+    .direction-row { display: flex; gap: 6px; }
     .direction-btn {
       flex: 1;
-      padding: 10px 0;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface);
+      padding: 9px 0;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: none;
       font-family: var(--font);
-      font-size: 0.85rem;
-      color: var(--text-secondary);
+      font-size: 0.8rem;
+      color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
       text-align: center;
@@ -199,13 +212,14 @@
       width: 100%;
       min-height: 60px;
       padding: 12px 16px;
-      border: 1.5px dashed var(--border);
-      border-radius: 12px;
+      border: none;
+      border-bottom: 1px dashed var(--border);
+      border-radius: 0;
       font-family: var(--font);
-      font-size: 0.9rem;
-      line-height: 1.5;
-      color: var(--text);
-      background: var(--surface);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      background: none;
       resize: none;
       outline: none;
       transition: border-color 0.2s;
@@ -216,40 +230,43 @@
     /* 잡기 버튼 */
     .capture__submit {
       width: 100%;
-      padding: 16px;
+      padding: 15px;
       border: none;
-      border-radius: 12px;
-      background: var(--accent);
-      color: #fff;
+      border-radius: 20px;
+      background: var(--text);
+      color: var(--bg);
       font-family: var(--font);
-      font-size: 1.05rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 400;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+      transition: opacity 0.2s, transform 0.1s;
       margin-top: auto;
+      letter-spacing: 0.02em;
     }
-    .capture__submit:active { transform: scale(0.98); background: var(--accent-hover); }
-    .capture__submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .capture__submit:active { transform: scale(0.98); opacity: 0.8; }
+    .capture__submit:disabled { opacity: 0.15; cursor: not-allowed; }
 
     /* ====== 2. 포커스뷰 (결과) ====== */
     .focus { padding: 0 20px 24px; flex: 1; }
 
-    /* 중심 조각 카드 */
+    /* 중심 조각 */
     .focus__center {
-      padding: 18px;
-      background: var(--surface);
-      border-left: 4px solid var(--accent);
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      padding: 4px 0 16px;
+      background: none;
+      border-left: none;
+      border-radius: 0;
+      box-shadow: none;
       margin-bottom: 6px;
+      border-bottom: 1px solid var(--border);
     }
     .focus__center-text {
-      font-size: 1rem;
-      line-height: 1.7;
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      line-height: 1.9;
       color: var(--text);
     }
     .focus__center-meta {
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 0.75rem;
       color: var(--text-muted);
       display: flex;
@@ -257,13 +274,14 @@
       flex-wrap: wrap;
     }
     .focus__center-thought {
-      margin-top: 12px;
-      padding-top: 12px;
+      margin-top: 14px;
+      padding-top: 14px;
       border-top: 1px solid var(--border-light);
-      font-size: 0.85rem;
+      font-family: var(--font-serif);
+      font-size: 0.9rem;
       color: var(--text-secondary);
       font-style: italic;
-      line-height: 1.5;
+      line-height: 1.7;
     }
     .focus__center-source {
       margin-top: 8px;
@@ -274,8 +292,9 @@
       white-space: nowrap;
     }
     .focus__center-source a {
-      color: var(--accent);
+      color: var(--text-muted);
       text-decoration: none;
+      border-bottom: 1px solid var(--border);
     }
 
     /* 연결 탐색 섹션 */
@@ -301,18 +320,18 @@
 
     /* 연결 카드 */
     .focus-card {
-      padding: 14px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 8px;
+      padding: 14px 0;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border-light);
+      border-radius: 0;
+      margin-bottom: 0;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
       position: relative;
     }
     .focus-card:active {
-      background: var(--surface-hover);
-      border-color: var(--accent-border);
+      opacity: 0.6;
     }
     .focus-card__header {
       display: flex;
@@ -396,30 +415,30 @@
     .focus__actions {
       display: flex;
       gap: 8px;
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border-light);
+      margin-top: 28px;
+      padding-top: 0;
+      border-top: none;
     }
     .focus__btn {
       flex: 1;
-      padding: 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      background: var(--surface);
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: none;
       font-family: var(--font);
-      font-size: 0.9rem;
-      color: var(--text-secondary);
+      font-size: 0.85rem;
+      color: var(--text-muted);
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
-    .focus__btn:active { background: var(--surface-hover); }
+    .focus__btn:active { color: var(--text-secondary); }
     .focus__btn--primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
+      background: var(--text);
+      border-color: var(--text);
+      color: var(--bg);
     }
-    .focus__btn--primary:active { background: var(--accent-hover); }
+    .focus__btn--primary:active { opacity: 0.8; }
 
     /* 포커스 네비게이션 히스토리 */
     .focus__breadcrumb {
@@ -470,6 +489,7 @@
       border-top: 1px solid var(--border);
       padding: 6px 0 env(safe-area-inset-bottom, 8px);
       z-index: 30;
+      transition: background 0.3s, border-color 0.3s;
     }
     .tab-bar__item {
       flex: 1;
@@ -482,132 +502,160 @@
       border: none;
       font-family: var(--font);
       cursor: pointer;
-      transition: color 0.15s;
+      transition: color 0.2s;
       color: var(--text-muted);
     }
-    .tab-bar__item.is-active { color: var(--accent); }
-    .tab-bar__icon { font-size: 1.2rem; line-height: 1; }
-    .tab-bar__label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.02em; }
+    .tab-bar__item.is-active { color: var(--text-secondary); }
+    .tab-bar__icon { font-size: 1.1rem; line-height: 1; }
+    .tab-bar__label { font-size: 0.6rem; font-weight: 400; letter-spacing: 0.03em; }
 
     /* 탭 바가 있으므로 뷰에 하단 패딩 */
     .view { padding-bottom: 72px; }
 
     /* ====== 만남 화면 ====== */
     .encounter {
-      padding: 0 20px 24px;
+      padding: 0 32px 24px;
       flex: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      max-width: 480px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     .encounter__intro {
+      font-family: var(--font-serif);
       font-size: 0.85rem;
       color: var(--text-muted);
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 32px;
+      animation: mistFadeIn 0.6s ease both;
     }
 
     .encounter__card {
-      background: var(--surface);
-      border-radius: 16px;
-      padding: 24px 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-      animation: fadeIn 0.4s ease both;
+      background: none;
+      border-radius: 0;
+      padding: 0;
+      box-shadow: none;
+      animation: mistFadeIn 1s ease both;
+      animation-delay: 0.2s;
+      opacity: 0;
     }
 
     .encounter__text {
       font-family: var(--font-serif);
-      font-size: 1.15rem;
-      line-height: 1.8;
+      font-size: 1.3rem;
+      line-height: 2.1;
       color: var(--text);
-      margin-bottom: 16px;
+      margin-bottom: 24px;
+      text-align: center;
     }
 
     .encounter__meta {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      gap: 16px;
       margin-bottom: 12px;
+      opacity: 0;
+      animation: mistFadeIn 0.8s ease both;
+      animation-delay: 0.8s;
     }
 
     .encounter__tone {
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 400;
+      padding: 0;
+      border-radius: 0;
+      background: none;
+      letter-spacing: 0.03em;
     }
-    .encounter__tone--positive { background: rgba(90, 138, 106, 0.1); color: var(--tone-positive); }
-    .encounter__tone--critic { background: rgba(196, 100, 74, 0.1); color: var(--tone-critic); }
-    .encounter__tone--hold { background: rgba(122, 122, 122, 0.1); color: var(--tone-hold); }
+    .encounter__tone--positive { color: var(--tone-positive); }
+    .encounter__tone--critic { color: var(--tone-critic); }
+    .encounter__tone--hold { color: var(--tone-hold); }
 
     .encounter__sensitivity {
-      flex: 1;
       display: flex;
       align-items: center;
       gap: 8px;
     }
     .encounter__sensitivity-bar {
-      flex: 1;
-      height: 4px;
+      width: 48px;
+      height: 2px;
       background: var(--border);
-      border-radius: 2px;
+      border-radius: 1px;
       overflow: hidden;
     }
     .encounter__sensitivity-fill {
       height: 100%;
-      border-radius: 2px;
+      border-radius: 1px;
       transition: width 0.3s ease;
     }
     .encounter__sensitivity-value {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
-      min-width: 24px;
+      min-width: 20px;
       text-align: right;
     }
 
     .encounter__thought {
-      padding: 12px 0;
-      border-top: 1px solid var(--border-light);
-      font-size: 0.9rem;
+      padding: 16px 0;
+      border-top: none;
+      font-family: var(--font-serif);
+      font-size: 0.95rem;
       color: var(--text-secondary);
       font-style: italic;
-      line-height: 1.6;
+      line-height: 1.8;
+      text-align: center;
+      opacity: 0;
+      animation: mistFadeIn 0.8s ease both;
+      animation-delay: 1s;
     }
 
     .encounter__source {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       padding-top: 8px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      text-align: center;
+      opacity: 0;
+      animation: mistFadeIn 0.8s ease both;
+      animation-delay: 1s;
     }
-    .encounter__source a { color: var(--accent); text-decoration: none; }
+    .encounter__source a { color: var(--text-muted); text-decoration: none; border-bottom: 1px solid var(--border); }
 
     .encounter__time {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
-      margin-top: 12px;
-      text-align: right;
+      margin-top: 16px;
+      text-align: center;
+      opacity: 0;
+      animation: mistFadeIn 0.8s ease both;
+      animation-delay: 1.1s;
     }
 
     .encounter__next {
       display: block;
       width: 100%;
-      margin-top: 24px;
+      margin-top: 32px;
       padding: 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: none;
       font-family: var(--font);
-      font-size: 0.95rem;
-      color: var(--text-secondary);
+      font-size: 0.85rem;
+      color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
       text-align: center;
+      opacity: 0;
+      animation: mistFadeIn 0.6s ease both;
+      animation-delay: 1.3s;
     }
-    .encounter__next:active { background: var(--surface-hover); border-color: var(--accent-border); }
+    .encounter__next:active { background: var(--accent-light); color: var(--text-secondary); }
 
     /* 만남 빈 상태 */
     .encounter__empty {
@@ -615,38 +663,51 @@
       padding: 40px 20px;
     }
     .encounter__empty-icon {
-      font-size: 2rem;
-      color: var(--accent);
-      margin-bottom: 16px;
+      font-size: 1.8rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
       font-family: var(--font-serif);
+      opacity: 0.6;
     }
     .encounter__empty-text {
-      font-size: 1rem;
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
       color: var(--text-secondary);
       margin-bottom: 8px;
+      line-height: 1.8;
     }
     .encounter__empty-sub {
       font-size: 0.85rem;
       color: var(--text-muted);
-      line-height: 1.5;
+      line-height: 1.6;
     }
     .encounter__empty-btn {
       display: inline-block;
-      margin-top: 20px;
-      padding: 12px 24px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
+      margin-top: 24px;
+      padding: 12px 28px;
+      background: none;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 20px;
       font-family: var(--font);
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 400;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.2s;
     }
-    .encounter__empty-btn:active { background: var(--accent-hover); }
+    .encounter__empty-btn:active { background: var(--accent-light); color: var(--accent); }
 
-    /* ====== 궤적 ====== */
+    /* ====== 궤적 (밤하늘) ====== */
+    #trailView {
+      background: var(--night-bg);
+    }
+    #trailView .header {
+      background: var(--night-bg);
+    }
+    #trailView .header__title {
+      color: var(--night-text);
+    }
+
     .trail {
       padding: 0 20px 24px;
       flex: 1;
@@ -663,19 +724,20 @@
     }
     .trail__empty-icon {
       font-size: 1.5rem;
-      color: var(--text-muted);
+      color: var(--night-text-muted);
       margin-bottom: 16px;
       letter-spacing: 8px;
     }
     .trail__empty-text {
+      font-family: var(--font-serif);
       font-size: 1rem;
-      color: var(--text-secondary);
+      color: var(--night-text-secondary);
       margin-bottom: 8px;
     }
     .trail__empty-sub {
       font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.5;
+      color: var(--night-text-muted);
+      line-height: 1.6;
     }
 
     /* 기간 토글 */
@@ -687,19 +749,19 @@
     }
     .trail__toggle-btn {
       background: none;
-      border: 1px solid var(--border);
+      border: 1px solid var(--night-border);
       font-family: var(--font);
       font-size: 0.8rem;
-      color: var(--text-muted);
+      color: var(--night-text-muted);
       padding: 5px 14px;
       border-radius: 16px;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .trail__toggle-btn.is-active {
-      background: var(--accent-light);
-      border-color: var(--accent-border);
-      color: var(--accent);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+      color: var(--night-text);
     }
 
     /* 날짜 그룹 */
@@ -709,12 +771,13 @@
       -webkit-overflow-scrolling: touch;
     }
     .trail__month {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      color: var(--text-secondary);
-      margin: 16px 0 8px;
+      color: var(--night-text-secondary);
+      margin: 20px 0 10px;
       padding-bottom: 6px;
-      border-bottom: 1px solid var(--border-light);
+      border-bottom: 1px solid var(--night-border);
+      letter-spacing: 0.02em;
     }
     .trail__month:first-child {
       margin-top: 0;
@@ -723,11 +786,11 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 6px 0;
+      padding: 8px 0;
     }
     .trail__day-label {
       font-size: 0.8rem;
-      color: var(--text-muted);
+      color: var(--night-text-muted);
       min-width: 32px;
       text-align: right;
       flex-shrink: 0;
@@ -735,45 +798,60 @@
     .trail__dots {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 8px;
       align-items: center;
     }
 
-    /* 점 (dot) */
+    /* 점 (dot) — 별빛 */
     .trail__dot {
       border-radius: 50%;
       cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform 0.2s, filter 0.2s;
       flex-shrink: 0;
       -webkit-user-select: none;
       user-select: none;
+      position: relative;
+    }
+    .trail__dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: inherit;
+      opacity: 0.35;
+      filter: blur(4px);
+      z-index: -1;
+      pointer-events: none;
     }
     .trail__dot:active {
       transform: scale(1.3);
-      box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.2);
+      filter: brightness(1.3);
     }
-    /* 크기 = 감도 (UI값 1~100) */
-    .trail__dot--s1 { width: 8px; height: 8px; }
-    .trail__dot--s2 { width: 12px; height: 12px; }
-    .trail__dot--s3 { width: 16px; height: 16px; }
-    .trail__dot--s4 { width: 20px; height: 20px; }
-    .trail__dot--s5 { width: 24px; height: 24px; }
+    /* 크기 = 감도 */
+    .trail__dot--s1 { width: 6px; height: 6px; }
+    .trail__dot--s2 { width: 10px; height: 10px; }
+    .trail__dot--s3 { width: 14px; height: 14px; }
+    .trail__dot--s4 { width: 18px; height: 18px; }
+    .trail__dot--s5 { width: 22px; height: 22px; }
+    .trail__dot--s1::after { inset: -2px; filter: blur(3px); }
+    .trail__dot--s5::after { inset: -4px; filter: blur(6px); opacity: 0.3; }
 
     /* 하단 요약 */
     .trail__summary {
       margin-top: 20px;
       padding: 16px;
-      background: var(--bg-secondary);
+      background: var(--night-surface);
+      border: 1px solid var(--night-border);
       border-radius: 12px;
       text-align: center;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
+      font-size: 0.8rem;
+      color: var(--night-text-secondary);
       line-height: 1.8;
     }
     .trail__summary-count {
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      color: var(--text);
+      color: var(--night-text);
     }
     .trail__summary-tones {
       display: flex;
@@ -787,10 +865,23 @@
       gap: 4px;
     }
     .trail__summary-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       display: inline-block;
+      box-shadow: 0 0 4px 1px currentColor;
+    }
+
+    /* 밤하늘 탭바 오버라이드 */
+    #trailView.is-active ~ .tab-bar {
+      background: var(--night-bg);
+      border-color: var(--night-border);
+    }
+    #trailView.is-active ~ .tab-bar .tab-bar__item {
+      color: var(--night-text-muted);
+    }
+    #trailView.is-active ~ .tab-bar .tab-bar__item.is-active {
+      color: var(--night-text);
     }
 
     /* ====== 주변부 (periphery) ====== */
@@ -808,17 +899,17 @@
       gap: 8px;
     }
     .periphery-card {
-      padding: 14px 16px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-light);
-      border-radius: 10px;
+      padding: 12px 0;
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border-light);
+      border-radius: 0;
       cursor: pointer;
-      transition: all 0.15s;
-      animation: fadeIn 0.3s ease both;
+      transition: all 0.2s;
+      animation: mistFadeIn 0.5s ease both;
     }
     .periphery-card:active {
-      background: var(--surface-hover);
-      border-color: var(--accent-border);
+      opacity: 0.6;
     }
     .periphery-card__text {
       font-family: var(--font-serif);
@@ -849,16 +940,20 @@
     .periphery-card__tone--hold { background: rgba(122, 122, 122, 0.1); color: var(--tone-hold); }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    .anim-fade { animation: fadeIn 0.3s ease both; }
+    @keyframes mistFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .anim-fade { animation: mistFadeIn 0.5s ease both; }
 
     @keyframes slideIn {
-      from { opacity: 0; transform: translateX(-12px); }
-      to { opacity: 1; transform: translateX(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    .anim-slide { animation: slideIn 0.25s ease both; }
+    .anim-slide { animation: mistFadeIn 0.4s ease both; }
 
     /* ====== 연결하기 시트 (bottom sheet) ====== */
     .link-sheet {
@@ -901,7 +996,7 @@
     .link-sheet__title {
       font-family: var(--font-serif);
       font-size: 1.05rem;
-      font-weight: 700;
+      font-weight: 400;
       color: var(--text);
       margin-bottom: 16px;
     }
@@ -1039,21 +1134,23 @@
       width: 100%;
       padding: 14px;
       border: none;
-      border-radius: 12px;
-      background: var(--accent);
-      color: #fff;
+      border-radius: 20px;
+      background: var(--text);
+      color: var(--bg);
       font-family: var(--font);
-      font-size: 0.95rem;
-      font-weight: 600;
+      font-size: 0.9rem;
+      font-weight: 400;
       cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
+      transition: opacity 0.2s;
+      letter-spacing: 0.02em;
     }
-    .link-sheet__submit:active { background: var(--accent-hover); }
-    .link-sheet__submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .link-sheet__submit:active { opacity: 0.8; }
+    .link-sheet__submit:disabled { opacity: 0.15; cursor: not-allowed; }
 
     /* ====== 궤적 멀티선택 ====== */
     .trail__dot.is-selected {
-      box-shadow: 0 0 0 3px var(--accent), 0 0 0 5px rgba(184, 149, 106, 0.3);
+      box-shadow: 0 0 0 2px var(--night-text), 0 0 8px 2px rgba(255,255,255,0.15);
+      filter: brightness(1.4);
     }
     .trail__select-bar {
       position: fixed;
@@ -1063,38 +1160,39 @@
       display: flex;
       gap: 8px;
       padding: 12px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: rgba(20, 22, 28, 0.95);
+      border: 1px solid var(--night-border);
       border-radius: 14px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
       z-index: 20;
       animation: sheetUp 0.2s ease;
       align-items: center;
+      backdrop-filter: blur(8px);
     }
     .trail__select-count {
       flex: 1;
       font-size: 0.85rem;
-      color: var(--text-secondary);
+      color: var(--night-text-secondary);
     }
     .trail__select-cancel {
       background: none;
-      border: 1px solid var(--border);
+      border: 1px solid var(--night-border);
       border-radius: 10px;
       padding: 8px 16px;
       font-family: var(--font);
       font-size: 0.8rem;
-      color: var(--text-secondary);
+      color: var(--night-text-secondary);
       cursor: pointer;
     }
     .trail__select-link {
-      background: var(--accent);
-      border: none;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: 10px;
       padding: 8px 16px;
       font-family: var(--font);
       font-size: 0.8rem;
       font-weight: 600;
-      color: #fff;
+      color: var(--night-text);
       cursor: pointer;
     }
     .trail__select-link:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -1103,19 +1201,22 @@
     .encounter__link-btn {
       display: block;
       width: 100%;
-      margin-top: 10px;
+      margin-top: 8px;
       padding: 12px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
-      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: none;
       font-family: var(--font);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--text-muted);
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s;
+      transition: all 0.2s;
+      opacity: 0;
+      animation: mistFadeIn 0.6s ease both;
+      animation-delay: 1.4s;
     }
-    .encounter__link-btn:active { background: var(--surface-hover); border-color: var(--accent-border); color: var(--accent); }
+    .encounter__link-btn:active { background: var(--accent-light); color: var(--text-secondary); }
 
     /* ====== 인증 오버레이 ====== */
     .auth-overlay {
@@ -1138,13 +1239,14 @@
     }
     .auth-title {
       font-family: var(--font-serif);
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--accent);
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--text);
       text-align: center;
       margin-bottom: 2px;
     }
     .auth-subtitle {
+      font-family: var(--font-serif);
       font-size: 0.9rem;
       color: var(--text-muted);
       text-align: center;
@@ -1158,34 +1260,35 @@
     .auth-tab {
       flex: 1;
       padding: 10px;
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: none;
       font-family: var(--font);
-      font-size: 0.9rem;
-      color: var(--text-secondary);
+      font-size: 0.85rem;
+      color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
     .auth-tab.is-active {
-      border-color: var(--accent);
-      color: var(--accent);
-      font-weight: 600;
-      background: var(--accent-light);
+      border-color: var(--text);
+      color: var(--text);
+      font-weight: 400;
+      background: none;
     }
     .auth-input {
       width: 100%;
       padding: 14px 16px;
-      border: 1.5px solid var(--border);
-      border-radius: 12px;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
       font-family: var(--font);
       font-size: 1rem;
       color: var(--text);
-      background: var(--surface);
+      background: none;
       outline: none;
       transition: border-color 0.2s;
     }
-    .auth-input:focus { border-color: var(--accent); }
+    .auth-input:focus { border-color: var(--text); }
     .auth-error {
       font-size: 0.85rem;
       color: var(--tone-critic);
@@ -1193,20 +1296,21 @@
       min-height: 20px;
     }
     .auth-submit {
-      padding: 16px;
+      padding: 15px;
       border: none;
-      border-radius: 12px;
-      background: var(--accent);
-      color: #fff;
+      border-radius: 20px;
+      background: var(--text);
+      color: var(--bg);
       font-family: var(--font);
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 400;
       cursor: pointer;
       margin-top: 4px;
-      transition: background 0.15s;
+      transition: opacity 0.2s;
+      letter-spacing: 0.02em;
     }
-    .auth-submit:active { background: var(--accent-hover); }
-    .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .auth-submit:active { opacity: 0.8; }
+    .auth-submit:disabled { opacity: 0.15; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -1613,7 +1717,7 @@
         var timeAgo = relativeTime(fiber.caught_at || fiber.created_at);
 
         var html = '';
-        html += '<div class="encounter__intro">' + escHtml(timeAgo) + ', you caught this</div>';
+        html += '<div class="encounter__intro">' + escHtml(timeAgo) + '</div>';
         html += '<div class="encounter__card">';
 
         // 텍스트
