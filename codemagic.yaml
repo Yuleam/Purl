@@ -46,7 +46,7 @@ workflows:
         script: xcode-project use-profiles
       - name: 빌드 번호 설정
         script: |
-          LATEST=$(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID" || echo "0")
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID" || echo "1")
           NEW_BUILD=$((LATEST + 1))
           echo "=== 빌드 번호: $NEW_BUILD ==="
           # Info.plist 직접 수정
