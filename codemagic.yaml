@@ -20,28 +20,30 @@ workflows:
       - name: 루트 npm 설치
         script: npm install
       - name: 웹 빌드 (www/ 생성)
-        script: |
-          npm run build:web
-          ls -la www/
+        script: npm run build:web
       - name: iOS 플랫폼 추가 + 동기화
         script: |
           npx cap add ios || echo "iOS platform already exists"
           npx cap sync ios
-          echo "=== iOS 디렉토리 구조 ==="
-          ls -la ios/App/
       - name: CocoaPods 설치
         script: |
           cd ios/App
           if [ -f Podfile ]; then
             pod install --repo-update
           else
-            echo "Podfile not found, skipping pod install"
+            echo "Podfile not found, skipping"
           fi
-      - name: 서명 파일 생성
+      - name: 키체인 초기화
+        script: keychain initialize
+      - name: 인증서 키 생성 + 서명 파일
         script: |
+          openssl req -nodes -newkey rsa:2048 -keyout /tmp/cert_key.pem -out /tmp/cert_csr.pem -subj "/"
           app-store-connect fetch-signing-files $BUNDLE_ID \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --certificate-key /tmp/cert_key.pem
+      - name: 키체인에 인증서 등록
+        script: keychain add-certificates
       - name: 서명 프로파일 적용
         script: xcode-project use-profiles
       - name: IPA 빌드
