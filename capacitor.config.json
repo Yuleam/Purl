@@ -1,0 +1,9 @@
+{
+  "appId": "app.purl.knitting",
+  "appName": "Purl",
+  "webDir": "www",
+  "ios": {
+    "scheme": "Purl",
+    "contentInset": "automatic"
+  }
+}

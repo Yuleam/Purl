@@ -44,6 +44,10 @@ app.use(cors({
     if (origin && (origin.endsWith('.railway.app') || origin.endsWith('.onrender.com'))) {
       return callback(null, true);
     }
+    // Capacitor 네이티브 앱 (iOS)
+    if (origin && origin.startsWith('capacitor://')) {
+      return callback(null, true);
+    }
     // 프로덕션: 같은 origin에서 서빙되는 정적 파일 (origin 없음 → 이미 위에서 처리)
     callback(new Error('Not allowed by CORS'));
   },

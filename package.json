@@ -1,0 +1,15 @@
+{
+  "name": "purl",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Purl — 다시 만나기 위한 도구",
+  "scripts": {
+    "build:web": "node scripts/build-web.js",
+    "cap:sync": "npx cap sync"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/ios": "^8.2.0"
+  }
+}

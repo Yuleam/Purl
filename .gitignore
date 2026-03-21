@@ -4,3 +4,15 @@ server/models/
 .DS_Store
 Thumbs.db
 *.log
+
+# IDE / 편집기
+.obsidian/
+.vscode/
+
+# 개인 메모
+LEARN-CLAUDE-POWER-USER.md
+apple API.md
+
+# Capacitor 빌드 산출물
+www/
+ios/

@@ -1,0 +1,49 @@
+workflows:
+  ios-release:
+    name: iOS Release
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.purl.knitting
+      node: 20
+      vars:
+        BUNDLE_ID: "app.purl.knitting"
+        APP_NAME: "Purl"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: master
+          include: true
+    scripts:
+      - name: 루트 npm 설치
+        script: npm install
+      - name: 웹 빌드 (www/ 생성)
+        script: npm run build:web
+      - name: iOS 플랫폼 추가
+        script: |
+          npx cap add ios || true
+          npx cap sync ios
+      - name: Xcode 프로젝트 설정
+        script: |
+          cd ios/App
+          pod install
+      - name: Xcode 빌드
+        script: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+    artifacts:
+      - ios/App/build/**/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
