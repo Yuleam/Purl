@@ -38,10 +38,10 @@ workflows:
       - name: 인증서 키 생성 + 서명 파일
         script: |
           openssl req -nodes -newkey rsa:2048 -keyout /tmp/cert_key.pem -out /tmp/cert_csr.pem -subj "/"
+          export CERTIFICATE_PRIVATE_KEY=$(cat /tmp/cert_key.pem)
           app-store-connect fetch-signing-files $BUNDLE_ID \
             --type IOS_APP_STORE \
-            --create \
-            --certificate-key /tmp/cert_key.pem
+            --create
       - name: 키체인에 인증서 등록
         script: keychain add-certificates
       - name: 서명 프로파일 적용
