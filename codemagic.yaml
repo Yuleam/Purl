@@ -46,11 +46,12 @@ workflows:
         script: xcode-project use-profiles
       - name: 빌드 번호 자동 증가
         script: |
-          cd ios/App
           LATEST=$(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID" || echo "0")
           NEW_BUILD=$((LATEST + 1))
-          agvtool new-version -all $NEW_BUILD
           echo "빌드 번호: $NEW_BUILD"
+          PLIST="ios/App/App/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW_BUILD" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST"
       - name: IPA 빌드
         script: |
           cd ios/App
