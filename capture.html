@@ -1311,6 +1311,91 @@
     }
     .auth-submit:active { opacity: 0.8; }
     .auth-submit:disabled { opacity: 0.15; cursor: not-allowed; }
+
+    /* ====== 온보딩 ====== */
+    .onboard-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      animation: mistFadeIn 0.8s ease both;
+    }
+    .onboard-overlay.is-hidden { display: none; }
+    .onboard-card {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .onboard-card__title {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .onboard-card__desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+    .onboard-card__btn {
+      margin-top: 12px;
+      padding: 12px 32px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .onboard-card__btn:active { opacity: 0.8; }
+
+    .onboard-coach {
+      padding: 14px 20px;
+      background: var(--accent-light);
+      border-bottom: 1px solid var(--accent-border);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      text-align: center;
+      animation: mistFadeIn 0.6s ease both;
+    }
+    .onboard-coach.is-hidden { display: none; }
+
+    .onboard-celebrate {
+      padding: 16px 20px;
+      background: rgba(90, 138, 106, 0.08);
+      border-bottom: 1px solid rgba(90, 138, 106, 0.15);
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      text-align: center;
+      animation: mistFadeIn 0.6s ease both;
+    }
+    .onboard-celebrate.is-hidden { display: none; }
+    .onboard-celebrate__btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 20px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-family: var(--font);
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .onboard-celebrate__btn:active { background: var(--accent-light); }
   </style>
 </head>
 <body>
@@ -1319,15 +1404,28 @@
   <div class="auth-overlay is-hidden" id="authOverlay">
     <div class="auth-card">
       <h1 class="auth-title">Purl</h1>
-      <p class="auth-subtitle">A tool for rediscovering your thoughts</p>
+      <p class="auth-subtitle">그 순간의 영감을 다시 만나다</p>
       <div class="auth-tabs">
-        <button class="auth-tab is-active" id="authTabLogin">Sign in</button>
-        <button class="auth-tab" id="authTabRegister">Sign up</button>
+        <button class="auth-tab is-active" id="authTabLogin">로그인</button>
+        <button class="auth-tab" id="authTabRegister">가입</button>
       </div>
       <div id="authError" class="auth-error"></div>
-      <input class="auth-input" id="authEmail" type="email" placeholder="Email" autocomplete="email">
-      <input class="auth-input" id="authPassword" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
-      <button class="auth-submit" id="authSubmit">Sign in</button>
+      <input class="auth-input" id="authEmail" type="email" placeholder="이메일" autocomplete="email">
+      <input class="auth-input" id="authPassword" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">
+      <button class="auth-submit" id="authSubmit">로그인</button>
+    </div>
+  </div>
+
+  <!-- ====== 온보딩 오버레이 ====== -->
+  <div class="onboard-overlay is-hidden" id="onboardOverlay">
+    <div class="onboard-card">
+      <div class="onboard-card__title">Purl에 오신 것을 환영합니다</div>
+      <p class="onboard-card__desc">
+        그 순간의 영감을 다시 만나는 도구입니다.<br><br>
+        읽고, 느끼고, 생각한 것들의 조각을 캐치하세요.<br>
+        그 조각들이 어느 날 다시 당신을 찾아옵니다.
+      </p>
+      <button class="onboard-card__btn" id="onboardStartBtn">첫 번째 조각을 캐치해보세요</button>
     </div>
   </div>
 
@@ -1347,21 +1445,22 @@
     <header class="header">
       <span class="header__title">Catch</span>
     </header>
+    <div class="onboard-coach is-hidden" id="onboardCoach">무엇이든 적어보세요 — 생각, 인용, 느낌.</div>
     <main class="capture">
-      <textarea class="capture__text" id="textInput" placeholder="What's on your mind?"></textarea>
-      <input class="capture__source" id="sourceInput" type="text" placeholder="Source (optional)">
+      <textarea class="capture__text" id="textInput" placeholder="어떤 영감이 떠올랐나요?"></textarea>
+      <input class="capture__source" id="sourceInput" type="text" placeholder="출처 (선택)">
 
       <div>
-        <div class="label">Tone</div>
+        <div class="label">방향성</div>
         <div class="direction-row">
-          <button class="direction-btn is-active" data-tone="positive">Positive</button>
-          <button class="direction-btn" data-tone="critic">Critic</button>
-          <button class="direction-btn" data-tone="hold">Hold</button>
+          <button class="direction-btn is-active" data-tone="positive">공감</button>
+          <button class="direction-btn" data-tone="critic">비판</button>
+          <button class="direction-btn" data-tone="hold">보류</button>
         </div>
       </div>
 
       <div>
-        <div class="label">Sensitivity</div>
+        <div class="label">감도</div>
         <div class="sensitivity-row">
           <input class="sensitivity-slider" id="sensitivitySlider" type="range" min="1" max="100" value="50">
           <span class="sensitivity-value" id="sensitivityValue">50</span>
@@ -1369,8 +1468,8 @@
       </div>
 
       <div>
-        <div class="label">Thought (optional)</div>
-        <textarea class="capture__thought" id="thoughtInput" placeholder="Any thoughts about this..."></textarea>
+        <div class="label">생각 (선택)</div>
+        <textarea class="capture__thought" id="thoughtInput" placeholder="이 영감에 대한 생각..."></textarea>
       </div>
 
       <!-- 주변부 영역 -->
@@ -1379,21 +1478,26 @@
         <div class="periphery__list" id="peripheryList"></div>
       </div>
 
-      <button class="capture__submit" id="submitBtn" disabled>Catch</button>
+      <button class="capture__submit" id="submitBtn" disabled>캐치</button>
     </main>
   </div>
 
   <!-- ====== 2. 포커스뷰 ====== -->
   <div class="view" id="focusView">
     <header class="header">
-      <button class="header__action" id="focusBackBtn">&larr; Back</button>
+      <button class="header__action" id="focusBackBtn">&larr; 뒤로</button>
       <div class="header__actions">
-        <button class="header__action" id="focusExplorerBtn">All pieces</button>
+        <button class="header__action" id="focusExplorerBtn">모든 조각</button>
       </div>
     </header>
 
     <!-- 탐색 히스토리 -->
     <div class="focus__breadcrumb" id="focusBreadcrumb"></div>
+
+    <div class="onboard-celebrate is-hidden" id="onboardCelebrate">
+      첫 번째 조각을 캐치했어요! 조각을 더 캐치하면, 과거의 조각이 마주침 탭에서 다시 찾아옵니다.
+      <br><button class="onboard-celebrate__btn" id="onboardDoneBtn">알겠어요</button>
+    </div>
 
     <main class="focus" id="focusContent">
       <!-- 동적으로 채워짐 -->
@@ -1403,10 +1507,10 @@
   <!-- ====== 3. 궤적 화면 ====== -->
   <div class="view" id="trailView">
     <header class="header">
-      <span class="header__title">Trail</span>
+      <span class="header__title">발자취</span>
       <div class="trail__toggle" id="trailToggle">
-        <button class="trail__toggle-btn is-active" data-range="month">This month</button>
-        <button class="trail__toggle-btn" data-range="all">All</button>
+        <button class="trail__toggle-btn is-active" data-range="month">이번 달</button>
+        <button class="trail__toggle-btn" data-range="all">전체</button>
       </div>
     </header>
     <main class="trail" id="trailContent">
@@ -1418,15 +1522,15 @@
   <nav class="tab-bar" id="tabBar">
     <button class="tab-bar__item is-active" data-tab="encounter">
       <span class="tab-bar__icon">○</span>
-      <span class="tab-bar__label">Encounter</span>
+      <span class="tab-bar__label">마주침</span>
     </button>
     <button class="tab-bar__item" data-tab="capture">
       <span class="tab-bar__icon">+</span>
-      <span class="tab-bar__label">Catch</span>
+      <span class="tab-bar__label">캐치</span>
     </button>
     <button class="tab-bar__item" data-tab="trail">
       <span class="tab-bar__icon">∿</span>
-      <span class="tab-bar__label">Trail</span>
+      <span class="tab-bar__label">발자취</span>
     </button>
   </nav>
 
@@ -1435,16 +1539,16 @@
     <div class="link-sheet__backdrop" id="linkSheetBackdrop"></div>
     <div class="link-sheet__panel">
       <div class="link-sheet__handle"></div>
-      <div class="link-sheet__title">Link pieces</div>
+      <div class="link-sheet__title">연결하기</div>
       <div class="link-sheet__members" id="linkMembers"></div>
-      <button class="link-sheet__add-btn" id="linkAddBtn">+ Add piece</button>
+      <button class="link-sheet__add-btn" id="linkAddBtn">+ 조각 추가</button>
       <div class="link-sheet__search" id="linkSearch">
-        <input class="link-sheet__search-input" id="linkSearchInput" type="text" placeholder="Search pieces...">
+        <input class="link-sheet__search-input" id="linkSearchInput" type="text" placeholder="조각 검색...">
         <div class="link-sheet__search-results" id="linkSearchResults"></div>
       </div>
-      <div class="label">Why do these feel connected?</div>
-      <textarea class="link-sheet__why" id="linkWhyInput" placeholder="Reason (optional)"></textarea>
-      <button class="link-sheet__submit" id="linkSubmitBtn" disabled>Link</button>
+      <div class="label">왜 이어진다고 느꼈나요?</div>
+      <textarea class="link-sheet__why" id="linkWhyInput" placeholder="이유 (선택)"></textarea>
+      <button class="link-sheet__submit" id="linkSubmitBtn" disabled>연결</button>
     </div>
   </div>
 
@@ -1481,11 +1585,50 @@
         document.getElementById('authOverlay').classList.add('is-hidden');
       }
 
+      // ─── 온보딩 ───
+      var onboardStep = localStorage.getItem('purl_onboarding'); // 'step1' | 'step2' | null
+      var onboardOverlay = document.getElementById('onboardOverlay');
+      var onboardCoach = document.getElementById('onboardCoach');
+      var onboardCelebrate = document.getElementById('onboardCelebrate');
+
+      function startOnboarding() {
+        onboardStep = 'step1';
+        onboardOverlay.classList.remove('is-hidden');
+      }
+
+      document.getElementById('onboardStartBtn').addEventListener('click', function() {
+        onboardStep = 'step2';
+        localStorage.setItem('purl_onboarding', 'step2');
+        onboardOverlay.classList.add('is-hidden');
+        showView(captureView);
+        onboardCoach.classList.remove('is-hidden');
+        onboardCoach.textContent = '무엇이든 적어보세요 — 생각, 인용, 느낌.';
+        textInput.focus();
+      });
+
+      document.getElementById('onboardDoneBtn').addEventListener('click', function() {
+        onboardStep = null;
+        localStorage.removeItem('purl_onboarding');
+        onboardCelebrate.classList.add('is-hidden');
+      });
+
       // 앱 초기화 (로그인 후 호출)
       var appInitialized = false;
       function initApp() {
         if (appInitialized) return;
         appInitialized = true;
+
+        if (onboardStep === 'step1') {
+          startOnboarding();
+          return;
+        }
+        if (onboardStep === 'step2') {
+          showView(captureView);
+          onboardCoach.classList.remove('is-hidden');
+          textInput.focus();
+          return;
+        }
+
         showView(encounterView);
         loadEncounter();
       }
@@ -1503,7 +1646,7 @@
         authMode = 'login';
         authTabLogin.classList.add('is-active');
         authTabRegister.classList.remove('is-active');
-        authSubmit.textContent = 'Sign in';
+        authSubmit.textContent = '로그인';
         authError.textContent = '';
       });
 
@@ -1511,7 +1654,7 @@
         authMode = 'register';
         authTabRegister.classList.add('is-active');
         authTabLogin.classList.remove('is-active');
-        authSubmit.textContent = 'Get started';
+        authSubmit.textContent = '시작하기';
         authError.textContent = '';
       });
 
@@ -1519,7 +1662,7 @@
         var email = authEmail.value.trim();
         var password = authPassword.value;
         if (!email || !password) {
-          authError.textContent = 'Please enter your email and password';
+          authError.textContent = '이메일과 비밀번호를 입력해주세요';
           return;
         }
         authSubmit.disabled = true;
@@ -1533,15 +1676,18 @@
           });
           var data = await res.json();
           if (!res.ok) {
-            authError.textContent = data.error || 'Something went wrong';
+            authError.textContent = data.error || '문제가 발생했습니다';
             return;
           }
           authToken = data.token;
           localStorage.setItem('purl_token', authToken);
+          if (authMode === 'register') {
+            localStorage.setItem('purl_onboarding', 'step1');
+          }
           hideAuthOverlay();
           initApp();
         } catch (e) {
-          authError.textContent = 'Cannot connect to server';
+          authError.textContent = '서버에 연결할 수 없습니다';
         } finally {
           authSubmit.disabled = false;
         }
@@ -1566,7 +1712,7 @@
       // 포커스뷰 탐색 히스토리
       var focusHistory = [];
 
-      var TONE_LABEL = { positive: 'Positive', critic: 'Critic', hold: 'Hold' };
+      var TONE_LABEL = { positive: '공감', critic: '비판', hold: '보류' };
       var TONE_COLOR = { positive: '#5a8a6a', critic: '#c4644a', hold: '#7a7a7a' };
 
       // --- DOM ---
@@ -1672,7 +1818,7 @@
       // ====== 만남 (Encounter) ======
 
       async function loadEncounter() {
-        encounterContent.innerHTML = '<div class="encounter__empty"><div class="encounter__empty-text">Loading...</div></div>';
+        encounterContent.innerHTML = '<div class="encounter__empty"><div class="encounter__empty-text">불러오는 중...</div></div>';
 
         try {
           var res = await apiFetch(API + '/encounter');
@@ -1696,9 +1842,9 @@
         encounterContent.innerHTML =
           '<div class="encounter__empty">' +
             '<div class="encounter__empty-icon">Purl</div>' +
-            '<div class="encounter__empty-text">No pieces yet</div>' +
-            '<div class="encounter__empty-sub">Catch your first piece in the Catch tab</div>' +
-            '<button class="encounter__empty-btn" id="encounterToCapture">Catch a piece</button>' +
+            '<div class="encounter__empty-text">아직 조각이 없습니다</div>' +
+            '<div class="encounter__empty-sub">캐치 탭에서 첫 번째 조각을 캐치해보세요</div>' +
+            '<button class="encounter__empty-btn" id="encounterToCapture">캐치하기</button>' +
           '</div>';
 
         var btn = document.getElementById('encounterToCapture');
@@ -1712,7 +1858,7 @@
         currentEncounterFiberId = fiber.id;
         var sensitivity = (fiber.tension || 3) * 20;
         var tone = fiber.tone || 'positive';
-        var toneLabel = TONE_LABEL[tone] || 'Positive';
+        var toneLabel = TONE_LABEL[tone] || '공감';
         var toneColor = TONE_COLOR[tone] || TONE_COLOR.positive;
         var timeAgo = relativeTime(fiber.caught_at || fiber.created_at);
 
@@ -1755,8 +1901,8 @@
         html += '</div>'; // .encounter__card
 
         // 다음 만남 + 연결하기 버튼
-        html += '<button class="encounter__next" id="nextEncounterBtn">Next encounter</button>';
-        html += '<button class="encounter__link-btn" id="encounterLinkBtn">Link this</button>';
+        html += '<button class="encounter__next" id="nextEncounterBtn">다음 마주침</button>';
+        html += '<button class="encounter__link-btn" id="encounterLinkBtn">연결하기</button>';
 
         encounterContent.innerHTML = html;
 
@@ -1769,7 +1915,7 @@
         document.getElementById('nextEncounterBtn').addEventListener('click', async function() {
           var btn = this;
           btn.disabled = true;
-          btn.textContent = 'Loading...';
+          btn.textContent = '불러오는 중...';
 
           try {
             // 현재 만남 기록
@@ -1784,7 +1930,7 @@
             await loadEncounter();
           } catch (err) {
             console.error('next encounter failed:', err);
-            btn.textContent = 'Next encounter';
+            btn.textContent = '다음 마주침';
             btn.disabled = false;
           }
         });
@@ -1803,13 +1949,13 @@
         var month = Math.floor(day / 30);
         var year = Math.floor(day / 365);
 
-        if (sec < 60) return 'just now';
-        if (min < 60) return min + 'm ago';
-        if (hour < 24) return hour + 'h ago';
-        if (day < 7) return day + 'd ago';
-        if (week < 5) return week + 'w ago';
-        if (month < 12) return month + 'mo ago';
-        return year + 'y ago';
+        if (sec < 60) return '방금 전';
+        if (min < 60) return min + '분 전';
+        if (hour < 24) return hour + '시간 전';
+        if (day < 7) return day + '일 전';
+        if (week < 5) return week + '주 전';
+        if (month < 12) return month + '개월 전';
+        return year + '년 전';
       }
 
       // --- 감도 슬라이더 ---
@@ -1865,7 +2011,7 @@
         var html = '';
         fibers.forEach(function(fiber) {
           var tone = fiber.tone || 'positive';
-          var toneLabel = TONE_LABEL[tone] || 'Positive';
+          var toneLabel = TONE_LABEL[tone] || '공감';
           var sensitivity = (fiber.tension || 3) * 20;
           var timeAgo = relativeTime(fiber.caught_at || fiber.created_at);
 
@@ -1902,6 +2048,12 @@
       // --- 입력 유효성 ---
       function updateSubmit() {
         submitBtn.disabled = !textInput.value.trim();
+        // 온보딩 코치 메시지 업데이트
+        if (onboardStep === 'step2' && !onboardCoach.classList.contains('is-hidden')) {
+          onboardCoach.textContent = textInput.value.trim()
+            ? '방향성과 감도를 고르고, 캐치를 눌러보세요.'
+            : '무엇이든 적어보세요 — 생각, 인용, 느낌.';
+        }
       }
       textInput.addEventListener('input', updateSubmit);
       updateSubmit();
@@ -1912,7 +2064,7 @@
         if (!text) return;
 
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Catching...';
+        submitBtn.textContent = '캐치 중...';
 
         try {
           var body = {
@@ -1955,7 +2107,7 @@
           selectedTone = 'positive';
           document.querySelector('.direction-btn.is-active').classList.remove('is-active');
           document.querySelector('.direction-btn[data-tone="positive"]').classList.add('is-active');
-          submitBtn.textContent = 'Catch';
+          submitBtn.textContent = '캐치';
           updateSubmit();
           // 주변부 초기화
           peripherySection.style.display = 'none';
@@ -1965,11 +2117,19 @@
           focusHistory = [];
           openFocus('fiber', fiber.id, truncate(fiber.text, 20));
 
+          // 온보딩 Step 2 → 3: 첫 조각 잡기 완료
+          if (onboardStep === 'step2') {
+            onboardStep = 'step3';
+            localStorage.removeItem('purl_onboarding');
+            onboardCoach.classList.add('is-hidden');
+            onboardCelebrate.classList.remove('is-hidden');
+          }
+
         } catch (err) {
           console.error(err);
-          submitBtn.textContent = 'Retry';
+          submitBtn.textContent = '다시 시도';
           submitBtn.disabled = false;
-          setTimeout(function() { submitBtn.textContent = 'Catch'; }, 2000);
+          setTimeout(function() { submitBtn.textContent = '캐치'; }, 2000);
         }
       });
 
@@ -2019,7 +2179,7 @@
       }
 
       async function loadFocusContent(type, id) {
-        focusContent.innerHTML = '<div class="focus__loading">Loading...</div>';
+        focusContent.innerHTML = '<div class="focus__loading">불러오는 중...</div>';
 
         try {
           if (type === 'fiber') {
@@ -2047,8 +2207,8 @@
         html += '<div class="focus__center anim-fade">';
         html += '<div class="focus__center-text">' + escHtml(fiber.text) + '</div>';
         html += '<div class="focus__center-meta">';
-        html += '<span>Sensitivity ' + sensitivity + '</span>';
-        html += '<span>' + (TONE_LABEL[tone] || 'Positive') + '</span>';
+        html += '<span>감도 ' + sensitivity + '</span>';
+        html += '<span>' + (TONE_LABEL[tone] || '공감') + '</span>';
         html += '</div>';
         if (fiber.thought) {
           html += '<div class="focus__center-thought">' + escHtml(fiber.thought) + '</div>';
@@ -2069,24 +2229,24 @@
 
         if (links.length > 0) {
           html += '<div class="focus__section">';
-          html += '<div class="focus__section-header">Links <span class="focus__badge">' + links.length + '</span></div>';
+          html += '<div class="focus__section-header">연결 <span class="focus__badge">' + links.length + '</span></div>';
           links.forEach(function(lnk, i) {
             var members = (lnk.members || []).filter(function(m) { return m.id !== id; });
             var subText = members.map(function(m) { return truncate(m.text || '', 30); }).join(' / ');
-            html += renderFocusCard('link', lnk.id, lnk.why || '(no reason)', subText, null, i);
+            html += renderFocusCard('link', lnk.id, lnk.why || '(이유 없음)', subText, null, i);
           });
           html += '</div>';
         }
 
         if (links.length === 0) {
-          html += '<div class="focus__empty">No links yet.<br>Keep catching — connections will emerge.</div>';
+          html += '<div class="focus__empty">아직 연결이 없습니다.<br>계속 캐치하세요 — 연결이 드러날 거예요.</div>';
         }
 
         // 하단 액션
         html += '<div class="focus__actions">';
-        html += '<button class="focus__btn" id="focusDoneBtn">Close</button>';
-        html += '<button class="focus__btn" id="focusLinkBtn">Link</button>';
-        html += '<button class="focus__btn focus__btn--primary" id="focusNewBtn">Catch another</button>';
+        html += '<button class="focus__btn" id="focusDoneBtn">닫기</button>';
+        html += '<button class="focus__btn" id="focusLinkBtn">연결</button>';
+        html += '<button class="focus__btn focus__btn--primary" id="focusNewBtn">새로 캐치</button>';
         html += '</div>';
 
         focusContent.innerHTML = html;
@@ -2102,14 +2262,14 @@
 
         var html = '';
         html += '<div class="focus__center anim-fade">';
-        html += '<div class="focus__center-meta"><span>link</span></div>';
-        html += '<div class="focus__center-text" style="margin-top:8px">' + escHtml(link.why || '(no reason)') + '</div>';
+        html += '<div class="focus__center-meta"><span>연결</span></div>';
+        html += '<div class="focus__center-text" style="margin-top:8px">' + escHtml(link.why || '(이유 없음)') + '</div>';
         html += '</div>';
 
         var members = link.members || [];
         if (members.length > 0) {
           html += '<div class="focus__section">';
-          html += '<div class="focus__section-header">Linked pieces <span class="focus__badge">' + members.length + '</span></div>';
+          html += '<div class="focus__section-header">연결된 조각 <span class="focus__badge">' + members.length + '</span></div>';
           members.forEach(function(m, i) {
             html += renderFocusCard('fiber', m.id, m.text || '(empty)', null, null, i);
           });
@@ -2117,8 +2277,8 @@
         }
 
         html += '<div class="focus__actions">';
-        html += '<button class="focus__btn" id="focusDoneBtn">Close</button>';
-        html += '<button class="focus__btn focus__btn--primary" id="focusNewBtn">Catch another</button>';
+        html += '<button class="focus__btn" id="focusDoneBtn">닫기</button>';
+        html += '<button class="focus__btn focus__btn--primary" id="focusNewBtn">새로 캐치</button>';
         html += '</div>';
 
         focusContent.innerHTML = html;
@@ -2208,7 +2368,7 @@
 
       async function loadTrail() {
         trailLoaded = true;
-        trailContent.innerHTML = '<div class="trail__empty"><div class="trail__empty-text">Loading...</div></div>';
+        trailContent.innerHTML = '<div class="trail__empty"><div class="trail__empty-text">불러오는 중...</div></div>';
 
         try {
           var params = new URLSearchParams();
@@ -2244,8 +2404,8 @@
         trailContent.innerHTML =
           '<div class="trail__empty">' +
             '<div class="trail__empty-icon">· · ·</div>' +
-            '<div class="trail__empty-text">No pieces yet</div>' +
-            '<div class="trail__empty-sub">Catch your first piece in the Catch tab</div>' +
+            '<div class="trail__empty-text">아직 조각이 없습니다</div>' +
+            '<div class="trail__empty-sub">캐치 탭에서 첫 번째 조각을 캐치해보세요</div>' +
           '</div>';
       }
 
@@ -2267,8 +2427,7 @@
         fibers.forEach(function(f) {
           var d = new Date(f.caught_at);
           var mKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-          var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-          var mLabel = MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+          var mLabel = d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월';
           var day = d.getDate();
 
           if (!grouped[mKey]) {
@@ -2312,15 +2471,15 @@
         html += '</div>'; // .trail__scroll
 
         // 하단 요약
-        var rangeLabel = trailRange === 'month' ? 'This month' : 'All time';
+        var rangeLabel = trailRange === 'month' ? '이번 달' : '전체';
         html += '<div class="trail__summary">';
-        html += '<div class="trail__summary-count">' + rangeLabel + ': ' + summary.total + ' pieces</div>';
+        html += '<div class="trail__summary-count">' + rangeLabel + ': ' + summary.total + '개 조각</div>';
         html += '<div class="trail__summary-tones">';
-        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.positive + '"></span> Positive ' + summary.positive + '</span>';
-        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.critic + '"></span> Critic ' + summary.critic + '</span>';
-        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.hold + '"></span> Hold ' + summary.hold + '</span>';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.positive + '"></span> 공감 ' + summary.positive + '</span>';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.critic + '"></span> 비판 ' + summary.critic + '</span>';
+        html += '<span class="trail__summary-tone"><span class="trail__summary-dot" style="background:' + TONE_COLOR.hold + '"></span> 보류 ' + summary.hold + '</span>';
         html += '</div>';
-        html += '<div>Avg sensitivity ' + summary.avgSensitivity + '</div>';
+        html += '<div>평균 감도 ' + summary.avgSensitivity + '</div>';
         html += '</div>';
 
         trailContent.innerHTML = html;
@@ -2441,9 +2600,9 @@
         if (!trailSelectBar) return;
         var count = trailSelectedIds.length;
         trailSelectBar.innerHTML =
-          '<span class="trail__select-count">' + count + ' selected</span>' +
-          '<button class="trail__select-cancel">Cancel</button>' +
-          '<button class="trail__select-link"' + (count < 2 ? ' disabled' : '') + '>Link</button>';
+          '<span class="trail__select-count">' + count + '개 선택</span>' +
+          '<button class="trail__select-cancel">취소</button>' +
+          '<button class="trail__select-link"' + (count < 2 ? ' disabled' : '') + '>연결</button>';
 
         trailSelectBar.querySelector('.trail__select-cancel').addEventListener('click', exitTrailSelect);
         trailSelectBar.querySelector('.trail__select-link').addEventListener('click', function() {
@@ -2584,7 +2743,7 @@
       linkSubmitBtn.addEventListener('click', async function() {
         if (linkMemberFibers.length < 2) return;
         linkSubmitBtn.disabled = true;
-        linkSubmitBtn.textContent = 'Linking...';
+        linkSubmitBtn.textContent = '연결 중...';
 
         try {
           var body = {
@@ -2600,7 +2759,7 @@
           if (!res.ok) throw new Error('link failed');
 
           closeLinkSheet();
-          linkSubmitBtn.textContent = 'Link';
+          linkSubmitBtn.textContent = '연결';
 
           // 포커스뷰가 열려있으면 리로드
           if (focusView.classList.contains('is-active') && focusHistory.length > 0) {
@@ -2609,10 +2768,10 @@
           }
         } catch (err) {
           console.error('연결 실패:', err);
-          linkSubmitBtn.textContent = 'Retry';
+          linkSubmitBtn.textContent = '다시 시도';
           linkSubmitBtn.disabled = false;
           setTimeout(function() {
-            linkSubmitBtn.textContent = 'Link';
+            linkSubmitBtn.textContent = '연결';
             updateLinkSubmit();
           }, 2000);
         }
