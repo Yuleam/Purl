@@ -57,7 +57,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,  // capture.html, explorer.html이 인라인 스크립트 사용
+}));
 app.use(express.json({ limit: '100kb' }));
 
 // Rate limiting — 인증 라우트
