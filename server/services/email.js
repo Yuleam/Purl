@@ -23,12 +23,16 @@ function getTransporter() {
 }
 
 async function sendVerificationCode(toEmail, code) {
+  console.log('[email] sendVerificationCode 호출:', toEmail);
+  console.log('[email] SMTP_USER:', process.env.SMTP_USER ? '설정됨' : '없음');
+  console.log('[email] SMTP_PASS:', process.env.SMTP_PASS ? '설정됨' : '없음');
   const t = getTransporter();
   if (!t) {
     console.warn(`[email] 인증 코드 ${code} → ${toEmail} (SMTP 미설정, 로그만 출력)`);
     return false;
   }
 
+  console.log('[email] 발송 시도...');
   await t.sendMail({
     from: `"Purl" <${process.env.SMTP_USER}>`,
     to: toEmail,
