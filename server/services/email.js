@@ -25,7 +25,7 @@ async function sendVerificationCode(toEmail, code) {
 
   try {
     const { data, error } = await client.emails.send({
-      from: 'Mote <onboarding@resend.dev>',
+      from: 'Mote <hello@moteapp.cc>',
       to: toEmail,
       subject: 'Mote 인증 코드',
       html: `
@@ -64,7 +64,7 @@ async function sendPasswordResetCode(toEmail, code) {
 
   try {
     const { data, error } = await client.emails.send({
-      from: 'Mote <onboarding@resend.dev>',
+      from: 'Mote <hello@moteapp.cc>',
       to: toEmail,
       subject: 'Mote 비밀번호 재설정',
       html: `
