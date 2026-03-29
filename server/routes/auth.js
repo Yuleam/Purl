@@ -78,7 +78,8 @@ router.post('/register', async (req, res) => {
     res.status(201).json({
       needsVerification: true,
       email: normalizedEmail,
-      message: 'Verification code sent',
+      emailSent,
+      message: emailSent ? 'Verification code sent' : 'Account created but email could not be sent. Please try resending.',
     });
   } catch (err) {
     console.error('POST /api/auth/register error:', err);
