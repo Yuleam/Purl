@@ -14,7 +14,7 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: master
+        - pattern: main
           include: true
     scripts:
       - name: 루트 npm 설치
