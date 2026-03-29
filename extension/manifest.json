@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Purl — Catch",
+  "name": "Mote — Catch",
   "version": "1.0.0",
   "description": "Select text on any webpage and right-click to catch a piece.",
   "permissions": ["contextMenus", "activeTab", "storage", "scripting", "tabs"],

@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#f4f3f1">
+  <meta name="theme-color" content="#f5f0e8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Purl">
-  <title>Purl</title>
+  <meta name="apple-mobile-web-app-title" content="Mote">
+  <title>Mote</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,34 +16,34 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <style>
     :root {
-      /* 안개 (Mist) — 기본 팔레트 */
-      --bg: #f4f3f1;
-      --bg-secondary: #eceae7;
+      /* Mote — 조용한 따뜻함 */
+      --bg: #f5f0e8;
+      --bg-secondary: #ede7dc;
       --surface: transparent;
       --surface-hover: rgba(0,0,0,0.015);
       --border: rgba(0,0,0,0.06);
       --border-light: rgba(0,0,0,0.03);
-      --text: #2a2a2a;
-      --text-secondary: #636363;
-      --text-muted: #9c9c9c;
-      --accent: #8f847a;
-      --accent-hover: #756b62;
-      --accent-light: rgba(143, 132, 122, 0.08);
-      --accent-border: rgba(143, 132, 122, 0.18);
+      --text: #2c2420;
+      --text-secondary: #6b5f55;
+      --text-muted: #a09488;
+      --accent: #7b6b8a;
+      --accent-hover: #655678;
+      --accent-light: rgba(123, 107, 138, 0.08);
+      --accent-border: rgba(123, 107, 138, 0.18);
       --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-serif: 'Gowun Batang', Georgia, serif;
-      --tone-positive: #5a8a6a;
-      --tone-critic: #c4644a;
+      --tone-positive: #5a8a7a;
+      --tone-critic: #a85a4a;
       --tone-hold: #8a8a8a;
 
-      /* 밤하늘 (Night Sky) — 궤적 전용 */
-      --night-bg: #111318;
+      /* 궤적 전용 — 점이 잘 보이는 어두운 배경 */
+      --night-bg: #121214;
       --night-surface: rgba(255,255,255,0.04);
-      --night-text: #ccc9c4;
-      --night-text-secondary: #8a8884;
-      --night-text-muted: #5a5854;
+      --night-text: #d4cfc6;
+      --night-text-secondary: #8a8580;
+      --night-text-muted: #5a5550;
       --night-border: rgba(255,255,255,0.06);
-      --night-accent: #a89e94;
+      --night-accent: #b8a9c8;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -54,6 +54,17 @@
       color: var(--text);
       min-height: 100dvh;
       overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
     }
 
     /* ====== 공통 ====== */
@@ -89,7 +100,7 @@
       color: var(--text-muted);
       cursor: pointer;
       padding: 6px 12px;
-      border-radius: 8px;
+      border-radius: 14px;
       transition: all 0.2s;
     }
     .header__action:active { color: var(--text-secondary); }
@@ -179,13 +190,13 @@
       flex: 1;
       padding: 9px 0;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 28px;
       background: none;
       font-family: var(--font);
       font-size: 0.8rem;
       color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s;
       text-align: center;
     }
     .direction-btn.is-active {
@@ -193,17 +204,17 @@
     }
     .direction-btn[data-tone="positive"].is-active {
       border-color: var(--tone-positive);
-      background: rgba(90, 138, 106, 0.08);
+      background: rgba(90, 138, 122, 0.08);
       color: var(--tone-positive);
     }
     .direction-btn[data-tone="critic"].is-active {
       border-color: var(--tone-critic);
-      background: rgba(196, 100, 74, 0.08);
+      background: rgba(168, 90, 74, 0.08);
       color: var(--tone-critic);
     }
     .direction-btn[data-tone="hold"].is-active {
       border-color: var(--tone-hold);
-      background: rgba(122, 122, 122, 0.08);
+      background: rgba(138, 138, 138, 0.08);
       color: var(--tone-hold);
     }
 
@@ -232,18 +243,18 @@
       width: 100%;
       padding: 15px;
       border: none;
-      border-radius: 20px;
+      border-radius: 28px;
       background: var(--text);
       color: var(--bg);
       font-family: var(--font);
       font-size: 0.95rem;
       font-weight: 400;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      transition: opacity 0.3s, transform 0.15s, box-shadow 0.3s;
       margin-top: auto;
       letter-spacing: 0.02em;
     }
-    .capture__submit:active { transform: scale(0.98); opacity: 0.8; }
+    .capture__submit:active { transform: scale(0.98); opacity: 0.8; box-shadow: 0 0 20px rgba(123, 107, 138, 0.2); }
     .capture__submit:disabled { opacity: 0.15; cursor: not-allowed; }
 
     /* ====== 2. 포커스뷰 (결과) ====== */
@@ -348,11 +359,11 @@
       flex-shrink: 0;
     }
     .focus-card__type--fiber {
-      background: rgba(184, 149, 106, 0.12);
+      background: rgba(123, 107, 138, 0.12);
       color: var(--accent);
     }
     .focus-card__type--thread {
-      background: rgba(90, 138, 106, 0.1);
+      background: rgba(90, 138, 122, 0.1);
       color: var(--tone-positive);
     }
     .focus-card__type--stitch {
@@ -364,7 +375,7 @@
       color: #a064a0;
     }
     .focus-card__type--link {
-      background: rgba(90, 138, 106, 0.1);
+      background: rgba(90, 138, 122, 0.1);
       color: var(--tone-positive);
     }
     .focus-card__similarity {
@@ -423,14 +434,14 @@
       flex: 1;
       padding: 12px;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 28px;
       background: none;
       font-family: var(--font);
       font-size: 0.85rem;
       color: var(--text-muted);
       cursor: pointer;
       text-align: center;
-      transition: all 0.2s;
+      transition: all 0.3s;
     }
     .focus__btn:active { color: var(--text-secondary); }
     .focus__btn--primary {
@@ -643,13 +654,13 @@
       margin-top: 32px;
       padding: 14px;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 28px;
       background: none;
       font-family: var(--font);
       font-size: 0.85rem;
       color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s;
       text-align: center;
       opacity: 0;
       animation: mistFadeIn 0.6s ease both;
@@ -688,7 +699,7 @@
       background: none;
       color: var(--text-secondary);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 28px;
       font-family: var(--font);
       font-size: 0.85rem;
       font-weight: 400;
@@ -754,7 +765,7 @@
       font-size: 0.8rem;
       color: var(--night-text-muted);
       padding: 5px 14px;
-      border-radius: 16px;
+      border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -842,7 +853,7 @@
       padding: 16px;
       background: var(--night-surface);
       border: 1px solid var(--night-border);
-      border-radius: 12px;
+      border-radius: 20px;
       text-align: center;
       font-size: 0.8rem;
       color: var(--night-text-secondary);
@@ -890,7 +901,8 @@
     }
     .periphery__divider {
       border: none;
-      border-top: 1.5px dashed var(--border);
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), transparent);
       margin: 0 0 14px 0;
     }
     .periphery__list {
@@ -935,25 +947,25 @@
       padding: 1px 8px;
       border-radius: 10px;
     }
-    .periphery-card__tone--positive { background: rgba(90, 138, 106, 0.1); color: var(--tone-positive); }
-    .periphery-card__tone--critic { background: rgba(196, 100, 74, 0.1); color: var(--tone-critic); }
-    .periphery-card__tone--hold { background: rgba(122, 122, 122, 0.1); color: var(--tone-hold); }
+    .periphery-card__tone--positive { background: rgba(90, 138, 122, 0.1); color: var(--tone-positive); }
+    .periphery-card__tone--critic { background: rgba(168, 90, 74, 0.1); color: var(--tone-critic); }
+    .periphery-card__tone--hold { background: rgba(138, 138, 138, 0.1); color: var(--tone-hold); }
 
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
     @keyframes mistFadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .anim-fade { animation: mistFadeIn 0.5s ease both; }
+    .anim-fade { animation: mistFadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
     @keyframes slideIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .anim-slide { animation: mistFadeIn 0.4s ease both; }
+    .anim-slide { animation: slideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
     /* ====== 연결하기 시트 (bottom sheet) ====== */
     .link-sheet {
@@ -976,15 +988,15 @@
     .link-sheet__panel {
       position: relative;
       background: var(--bg);
-      border-radius: 20px 20px 0 0;
+      border-radius: 28px 28px 0 0;
       padding: 20px 20px env(safe-area-inset-bottom, 20px);
       max-height: 85dvh;
       overflow-y: auto;
       animation: sheetUp 0.3s ease;
     }
     @keyframes sheetUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
+      from { transform: translateY(100%); opacity: 0.8; }
+      to { transform: translateY(0); opacity: 1; }
     }
     .link-sheet__handle {
       width: 36px;
@@ -1013,7 +1025,7 @@
       padding: 10px 14px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 16px;
     }
     .link-member__dot {
       width: 8px;
@@ -1044,7 +1056,7 @@
       width: 100%;
       padding: 10px;
       border: 1.5px dashed var(--border);
-      border-radius: 10px;
+      border-radius: 16px;
       background: none;
       font-family: var(--font);
       font-size: 0.85rem;
@@ -1064,7 +1076,7 @@
       width: 100%;
       padding: 10px 14px;
       border: 1.5px solid var(--border);
-      border-radius: 10px;
+      border-radius: 16px;
       font-family: var(--font);
       font-size: 0.85rem;
       color: var(--text);
@@ -1117,7 +1129,7 @@
       min-height: 60px;
       padding: 12px 14px;
       border: 1.5px solid var(--border);
-      border-radius: 10px;
+      border-radius: 16px;
       font-family: var(--font);
       font-size: 0.85rem;
       color: var(--text);
@@ -1134,7 +1146,7 @@
       width: 100%;
       padding: 14px;
       border: none;
-      border-radius: 20px;
+      border-radius: 28px;
       background: var(--text);
       color: var(--bg);
       font-family: var(--font);
@@ -1160,9 +1172,9 @@
       display: flex;
       gap: 8px;
       padding: 12px 16px;
-      background: rgba(20, 22, 28, 0.95);
+      background: rgba(15, 14, 19, 0.95);
       border: 1px solid var(--night-border);
-      border-radius: 14px;
+      border-radius: 20px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.4);
       z-index: 20;
       animation: sheetUp 0.2s ease;
@@ -1177,7 +1189,7 @@
     .trail__select-cancel {
       background: none;
       border: 1px solid var(--night-border);
-      border-radius: 10px;
+      border-radius: 14px;
       padding: 8px 16px;
       font-family: var(--font);
       font-size: 0.8rem;
@@ -1187,7 +1199,7 @@
     .trail__select-link {
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 10px;
+      border-radius: 14px;
       padding: 8px 16px;
       font-family: var(--font);
       font-size: 0.8rem;
@@ -1204,7 +1216,7 @@
       margin-top: 8px;
       padding: 12px;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 28px;
       background: none;
       font-family: var(--font);
       font-size: 0.85rem;
@@ -1261,7 +1273,7 @@
       flex: 1;
       padding: 10px;
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 28px;
       background: none;
       font-family: var(--font);
       font-size: 0.85rem;
@@ -1296,9 +1308,10 @@
       min-height: 20px;
     }
     .auth-submit {
+      width: 100%;
       padding: 15px;
       border: none;
-      border-radius: 20px;
+      border-radius: 28px;
       background: var(--text);
       color: var(--bg);
       font-family: var(--font);
@@ -1306,7 +1319,7 @@
       font-weight: 400;
       cursor: pointer;
       margin-top: 4px;
-      transition: opacity 0.2s;
+      transition: opacity 0.3s, box-shadow 0.3s;
       letter-spacing: 0.02em;
     }
     .auth-submit:active { opacity: 0.8; }
@@ -1381,7 +1394,7 @@
       background: var(--text);
       color: var(--bg);
       border: none;
-      border-radius: 8px;
+      border-radius: 28px;
       font-size: 0.95rem;
       font-family: var(--font);
       cursor: pointer;
@@ -1403,8 +1416,8 @@
 
     .onboard-celebrate {
       padding: 16px 20px;
-      background: rgba(90, 138, 106, 0.08);
-      border-bottom: 1px solid rgba(90, 138, 106, 0.15);
+      background: rgba(90, 138, 122, 0.08);
+      border-bottom: 1px solid rgba(90, 138, 122, 0.15);
       font-size: 0.88rem;
       color: var(--text-secondary);
       line-height: 1.6;
@@ -1418,7 +1431,7 @@
       padding: 6px 20px;
       background: transparent;
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 14px;
       font-size: 0.82rem;
       font-family: var(--font);
       color: var(--text-secondary);
@@ -1432,8 +1445,8 @@
   <!-- ====== 로그인/회원가입 오버레이 ====== -->
   <div class="auth-overlay is-hidden" id="authOverlay">
     <div class="auth-card">
-      <h1 class="auth-title">Purl</h1>
-      <p class="auth-subtitle">그 순간의 영감을 다시 만나다</p>
+      <h1 class="auth-title">Mote</h1>
+      <p class="auth-subtitle">다시 만날 생각들</p>
       <div class="auth-tabs">
         <button class="auth-tab is-active" id="authTabLogin">로그인</button>
         <button class="auth-tab" id="authTabRegister">가입</button>
@@ -1462,20 +1475,19 @@
   <!-- ====== 온보딩 오버레이 ====== -->
   <div class="onboard-overlay is-hidden" id="onboardOverlay">
     <div class="onboard-card">
-      <div class="onboard-card__title">Purl에 오신 것을 환영합니다</div>
+      <div class="onboard-card__title">Mote</div>
       <p class="onboard-card__desc">
-        그 순간의 영감을 다시 만나는 도구입니다.<br><br>
-        읽고, 느끼고, 생각한 것들의 조각을 캐치하세요.<br>
-        그 조각들이 어느 날 다시 당신을 찾아옵니다.
+        떠오른 것들을 적어두세요.<br>
+        어느 날 다시 찾아옵니다.
       </p>
-      <button class="onboard-card__btn" id="onboardStartBtn">첫 번째 조각을 캐치해보세요</button>
+      <button class="onboard-card__btn" id="onboardStartBtn">시작하기</button>
     </div>
   </div>
 
   <!-- ====== 0. 만남 화면 (홈) ====== -->
   <div class="view" id="encounterView">
     <header class="header">
-      <span class="header__title">Purl</span>
+      <span class="header__title">Mote</span>
       <button class="header__action" id="logoutBtn" style="font-size:0.8rem;color:var(--text-muted)">Sign out</button>
     </header>
     <main class="encounter" id="encounterContent">
@@ -1875,7 +1887,7 @@
       var focusHistory = [];
 
       var TONE_LABEL = { positive: '공감', critic: '비판', hold: '보류' };
-      var TONE_COLOR = { positive: '#5a8a6a', critic: '#c4644a', hold: '#7a7a7a' };
+      var TONE_COLOR = { positive: '#5a8a7a', critic: '#a85a4a', hold: '#8a8a8a' };
 
       // --- DOM ---
       var encounterView = document.getElementById('encounterView');
@@ -2005,7 +2017,7 @@
         currentEncounterFiberId = null;
         encounterContent.innerHTML =
           '<div class="encounter__empty">' +
-            '<div class="encounter__empty-icon">Purl</div>' +
+            '<div class="encounter__empty-icon">Mote</div>' +
             '<div class="encounter__empty-text">아직 조각이 없습니다</div>' +
             '<div class="encounter__empty-sub">캐치 탭에서 첫 번째 조각을 캐치해보세요</div>' +
             '<button class="encounter__empty-btn" id="encounterToCapture">캐치하기</button>' +

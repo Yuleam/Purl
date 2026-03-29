@@ -26,17 +26,17 @@ async function sendVerificationCode(toEmail, code) {
 
   try {
     const { data, error } = await client.emails.send({
-      from: 'Purl <onboarding@resend.dev>',
+      from: 'Mote <onboarding@resend.dev>',
       to: toEmail,
-      subject: 'Purl 이메일 인증 코드',
+      subject: 'Mote 인증 코드',
       html: `
         <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 32px;">
-          <h2 style="color: #2c2c2c; font-weight: 400;">Purl</h2>
+          <h2 style="color: #2c2420; font-weight: 400;">Mote</h2>
           <p style="color: #555; font-size: 15px; line-height: 1.6;">
             아래 코드를 입력해서 이메일을 인증해주세요.
           </p>
-          <div style="background: #f5f3f0; border-radius: 12px; padding: 24px; text-align: center; margin: 24px 0;">
-            <span style="font-size: 32px; letter-spacing: 8px; font-weight: 600; color: #2c2c2c;">${code}</span>
+          <div style="background: #f5f0e8; border-radius: 20px; padding: 24px; text-align: center; margin: 24px 0;">
+            <span style="font-size: 32px; letter-spacing: 8px; font-weight: 600; color: #2c2420;">${code}</span>
           </div>
           <p style="color: #999; font-size: 13px;">
             이 코드는 10분 동안 유효합니다.

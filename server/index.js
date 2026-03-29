@@ -1,5 +1,5 @@
 /**
- * Purl API Server
+ * Mote API Server
  */
 const express = require('express');
 const cors = require('cors');
@@ -46,8 +46,8 @@ app.use(cors({
     if (origin && (origin.endsWith('.railway.app') || origin.endsWith('.onrender.com'))) {
       return callback(null, true);
     }
-    // Capacitor 네이티브 앱 (iOS) — scheme이 'Purl' 또는 'capacitor'
-    if (origin && (origin.startsWith('capacitor://') || origin.startsWith('purl://'))) {
+    // Capacitor 네이티브 앱 (iOS) — scheme이 'Mote' 또는 'capacitor'
+    if (origin && (origin.startsWith('capacitor://') || origin.startsWith('mote://'))) {
       return callback(null, true);
     }
     // 프로덕션: 같은 origin에서 서빙되는 정적 파일 (origin 없음 → 이미 위에서 처리)
@@ -102,7 +102,7 @@ async function start() {
   }
   initDB();
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Purl API running on http://localhost:${PORT}`);
+    console.log(`Mote API running on http://localhost:${PORT}`);
   });
 
   // 임베딩 모델 로드 (서버 응답과 독립적으로 백그라운드 처리)

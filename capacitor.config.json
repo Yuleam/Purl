@@ -1,9 +1,9 @@
 {
-  "appId": "app.purl.knitting",
-  "appName": "Purl",
+  "appId": "app.mote.knitting",
+  "appName": "Mote",
   "webDir": "www",
   "ios": {
-    "scheme": "Purl",
+    "scheme": "Mote",
     "contentInset": "automatic"
   }
 }

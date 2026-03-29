@@ -44,7 +44,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       });
     })
     .catch(err => {
-      console.error('[purl] Catch failed:', err);
+      console.error('[mote] Catch failed:', err);
       chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: showErrorToast,

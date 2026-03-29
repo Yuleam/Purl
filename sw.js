@@ -1,6 +1,6 @@
-/** Purl Service Worker — PWA install + Share Target */
+/** Mote Service Worker — PWA install + Share Target */
 
-const CACHE_NAME = 'purl-v1';
+const CACHE_NAME = 'mote-v1';
 const PRECACHE = [
   '/capture.html',
   '/icons/icon-192.png',

@@ -3,31 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Purl — Trail</title>
+  <title>Mote — Trail</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <style>
     :root {
-      /* 밤하늘 (Night Sky) — 궤적 전용 */
-      --bg: #111318;
+      /* Mote 궤적 전용 — 점이 잘 보이는 어두운 배경 */
+      --bg: #121214;
       --bg-secondary: rgba(255,255,255,0.04);
       --surface: rgba(255,255,255,0.03);
       --surface-hover: rgba(255,255,255,0.06);
       --border: rgba(255,255,255,0.06);
       --border-light: rgba(255,255,255,0.03);
-      --text: #ccc9c4;
-      --text-secondary: #8a8884;
-      --text-muted: #5a5854;
-      --accent: #a89e94;
-      --accent-hover: #c4bab0;
-      --accent-light: rgba(168, 158, 148, 0.08);
-      --accent-border: rgba(168, 158, 148, 0.15);
+      --text: #d4cfc6;
+      --text-secondary: #8a8580;
+      --text-muted: #5a5550;
+      --accent: #b8a9c8;
+      --accent-hover: #d0c4dc;
+      --accent-light: rgba(184, 169, 200, 0.08);
+      --accent-border: rgba(184, 169, 200, 0.15);
       --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-serif: 'Gowun Batang', Georgia, serif;
-      --tone-positive: #5a8a6a;
-      --tone-critic: #c4644a;
+      --tone-positive: #5a8a7a;
+      --tone-critic: #a85a4a;
       --tone-hold: #8a8a8a;
     }
 
@@ -39,6 +39,17 @@
       color: var(--text);
       height: 100vh;
       overflow: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
     }
 
     /* ====== 레이아웃 ====== */
@@ -76,7 +87,7 @@
       font-size: 0.8rem;
       color: var(--text-muted);
       padding: 5px 14px;
-      border-radius: 16px;
+      border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s;
       text-decoration: none;
@@ -126,7 +137,7 @@
       font-size: 0.75rem;
       color: var(--text-muted);
       padding: 3px 12px;
-      border-radius: 12px;
+      border-radius: 16px;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -215,7 +226,7 @@
       padding: 12px;
       background: var(--bg-secondary);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 20px;
       text-align: center;
       font-size: 0.8rem;
       color: var(--text-secondary);
@@ -423,7 +434,7 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
-    .anim-fade { animation: fadeIn 0.5s ease both; }
+    .anim-fade { animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
   </style>
 </head>
 <body>
@@ -431,7 +442,7 @@
   <div class="app">
     <!-- 상단 바 -->
     <header class="app__topbar">
-      <span class="app__title">Purl</span>
+      <span class="app__title">Mote</span>
       <nav class="app__nav">
         <a href="/capture.html" class="app__nav-btn">Mobile</a>
         <button class="app__nav-btn is-active">Trail</button>
@@ -468,7 +479,7 @@
 
       var API = '/api';
       var TONE_LABEL = { positive: 'Positive', critic: 'Critic', hold: 'Hold' };
-      var TONE_COLOR = { positive: '#5a8a6a', critic: '#c4644a', hold: '#7a7a7a' };
+      var TONE_COLOR = { positive: '#5a8a7a', critic: '#a85a4a', hold: '#8a8a8a' };
 
       var trailScroll = document.getElementById('trailScroll');
       var trailToggle = document.getElementById('trailToggle');

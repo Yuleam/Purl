@@ -1,11 +1,11 @@
 {
-  "name": "Purl",
-  "short_name": "Purl",
-  "description": "A tool for rediscovering your thoughts",
+  "name": "Mote",
+  "short_name": "Mote",
+  "description": "다시 만날 생각들",
   "start_url": "/capture.html",
   "display": "standalone",
-  "background_color": "#faf9f7",
-  "theme_color": "#b8956a",
+  "background_color": "#f5f0e8",
+  "theme_color": "#7b6b8a",
   "orientation": "portrait",
   "icons": [
     {

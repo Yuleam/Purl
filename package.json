@@ -1,8 +1,8 @@
 {
-  "name": "purl",
+  "name": "mote",
   "version": "1.0.0",
   "private": true,
-  "description": "Purl — 다시 만나기 위한 도구",
+  "description": "Mote — 다시 만날 생각들",
   "scripts": {
     "build:web": "node scripts/build-web.js",
     "cap:sync": "npx cap sync"
