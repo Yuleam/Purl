@@ -12,7 +12,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getOne, getDB, generateId } = require('../db');
 const { authMiddleware, getSecret } = require('../middleware/auth');
-const { sendVerificationCode } = require('../services/email');
+const { sendVerificationCode, sendPasswordResetCode } = require('../services/email');
 
 const TOKEN_EXPIRY = '7d';
 const CODE_EXPIRY_MS = 10 * 60 * 1000; // 10분
@@ -192,6 +192,92 @@ router.post('/login', async (req, res) => {
     res.json({ token, user: { id: user.id, email: user.email } });
   } catch (err) {
     console.error('POST /api/auth/login error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/auth/forgot-password — 비밀번호 재설정 코드 발송
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = getOne('SELECT id, verified FROM users WHERE email = ?', [normalizedEmail]);
+
+    // 보안: 존재/인증 여부 미노출
+    if (!user || !user.verified) {
+      return res.json({ message: '등록된 이메일이면 재설정 코드를 보냈어요' });
+    }
+
+    // 기존 코드 무효화
+    getDB().run('UPDATE password_reset_codes SET used = 1 WHERE user_id = ? AND used = 0', [user.id]);
+
+    const code = generateCode();
+    const codeId = generateId('rc');
+    getDB().run(
+      'INSERT INTO password_reset_codes (id, user_id, code, expires_at, used) VALUES (?, ?, ?, ?, 0)',
+      [codeId, user.id, code, Date.now() + CODE_EXPIRY_MS]
+    );
+
+    await sendPasswordResetCode(normalizedEmail, code);
+    res.json({ message: '등록된 이메일이면 재설정 코드를 보냈어요' });
+  } catch (err) {
+    console.error('POST /api/auth/forgot-password error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/auth/reset-password — 비밀번호 재설정
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, code, password } = req.body;
+    if (!email || !code || !password) {
+      return res.status(400).json({ error: '모든 항목을 입력해주세요' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: '비밀번호는 8자 이상이어야 해요' });
+    }
+    if (password.length > 128) {
+      return res.status(400).json({ error: '비밀번호가 너무 길어요' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = getOne('SELECT id, email, verified FROM users WHERE email = ?', [normalizedEmail]);
+    if (!user || !user.verified) {
+      return res.status(400).json({ error: '올바르지 않은 코드예요' });
+    }
+
+    const record = getOne(
+      'SELECT * FROM password_reset_codes WHERE user_id = ? AND used = 0 ORDER BY expires_at DESC',
+      [user.id]
+    );
+    if (!record) {
+      return res.status(400).json({ error: '올바르지 않은 코드예요' });
+    }
+    if (Date.now() > record.expires_at) {
+      return res.status(400).json({ error: '코드가 만료되었어요. 다시 요청해주세요' });
+    }
+    if (record.attempts >= 5) {
+      getDB().run('UPDATE password_reset_codes SET used = 1 WHERE id = ?', [record.id]);
+      return res.status(400).json({ error: '시도 횟수를 초과했어요. 다시 요청해주세요' });
+    }
+    if (record.code !== code.trim()) {
+      getDB().run('UPDATE password_reset_codes SET attempts = attempts + 1 WHERE id = ?', [record.id]);
+      return res.status(400).json({ error: '올바르지 않은 코드예요' });
+    }
+
+    // 비밀번호 변경 + 코드 사용 처리
+    const passwordHash = await bcrypt.hash(password, 10);
+    getDB().run('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, user.id]);
+    getDB().run('UPDATE password_reset_codes SET used = 1 WHERE id = ?', [record.id]);
+
+    const token = jwt.sign({ id: user.id, email: user.email }, getSecret(), { expiresIn: TOKEN_EXPIRY });
+    res.json({ token, user: { id: user.id, email: user.email } });
+  } catch (err) {
+    console.error('POST /api/auth/reset-password error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

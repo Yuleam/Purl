@@ -72,6 +72,29 @@ class ApiService {
     return data;
   }
 
+  /// 비밀번호 재설정 코드 요청
+  Future<void> forgotPassword(String email) async {
+    await http.post(
+      _uri('/api/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+  }
+
+  /// 비밀번호 재설정 — 성공 시 token 반환
+  Future<Map<String, dynamic>> resetPassword(String email, String code, String password) async {
+    final res = await http.post(
+      _uri('/api/auth/reset-password'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'code': code, 'password': password}),
+    );
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    if (res.statusCode == 200 && data.containsKey('token')) {
+      await AuthService().saveToken(data['token'] as String);
+    }
+    return data;
+  }
+
   // === 프로필 ===
 
   Future<Map<String, dynamic>?> getProfile() async {

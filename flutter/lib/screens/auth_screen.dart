@@ -26,6 +26,17 @@ class _AuthScreenState extends State<AuthScreen> {
   String? _codeError;
   bool _codeLoading = false;
 
+  // 비밀번호 재설정 상태
+  bool _showResetEmail = false;
+  bool _showResetCode = false;
+  String _resetEmail = '';
+  final _resetEmailController = TextEditingController();
+  final _resetCodeController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _newPasswordConfirmController = TextEditingController();
+  String? _resetError;
+  bool _resetLoading = false;
+
   bool get _passwordsMatch =>
       _confirmController.text == _passwordController.text;
 
@@ -116,17 +127,65 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _sendResetCode() async {
+    final email = _resetEmailController.text.trim();
+    if (email.isEmpty) {
+      setState(() => _resetError = '이메일을 입력해주세요');
+      return;
+    }
+    setState(() { _resetLoading = true; _resetError = null; });
+    await ApiService().forgotPassword(email);
+    setState(() {
+      _resetLoading = false;
+      _resetEmail = email;
+      _showResetEmail = false;
+      _showResetCode = true;
+    });
+  }
+
+  Future<void> _submitReset() async {
+    final code = _resetCodeController.text.trim();
+    final pw = _newPasswordController.text;
+    final pwConfirm = _newPasswordConfirmController.text;
+    if (code.length != 6) {
+      setState(() => _resetError = '6자리 코드를 입력해주세요');
+      return;
+    }
+    if (pw.length < 8) {
+      setState(() => _resetError = '비밀번호는 8자 이상이어야 해요');
+      return;
+    }
+    if (pw != pwConfirm) {
+      setState(() => _resetError = '비밀번호가 일치하지 않아요');
+      return;
+    }
+    setState(() { _resetLoading = true; _resetError = null; });
+    final result = await ApiService().resetPassword(_resetEmail, code, pw);
+    setState(() => _resetLoading = false);
+    if (result.containsKey('token')) {
+      widget.onAuth();
+    } else {
+      setState(() => _resetError = result['error'] as String? ?? '문제가 발생했습니다');
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     _codeController.dispose();
+    _resetEmailController.dispose();
+    _resetCodeController.dispose();
+    _newPasswordController.dispose();
+    _newPasswordConfirmController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_showResetCode) return _buildResetCodeView();
+    if (_showResetEmail) return _buildResetEmailView();
     if (_showVerification) return _buildVerificationView();
     return _buildAuthView();
   }
@@ -338,7 +397,23 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                 ],
-                const SizedBox(height: 8),
+                // 비밀번호 찾기 (로그인 모드에서만)
+                if (_isLogin)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => setState(() {
+                        _showResetEmail = true;
+                        _resetEmailController.text = _emailController.text.trim();
+                        _resetError = null;
+                      }),
+                      child: Text(
+                        '비밀번호를 잊으셨나요?',
+                        style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 4),
 
                 // 에러
                 if (_error != null) ...[
@@ -436,6 +511,182 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
       focusedBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: AppColors.accent),
+      ),
+    );
+  }
+
+  Widget _buildResetEmailView() {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '비밀번호 재설정',
+                  style: GoogleFonts.gowunBatang(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '가입한 이메일을 입력하면\n재설정 코드를 보내드려요',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+                ),
+                const SizedBox(height: 32),
+                TextField(
+                  controller: _resetEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: _inputDecoration('이메일'),
+                  onSubmitted: (_) => _sendResetCode(),
+                ),
+                if (_resetError != null) ...[
+                  const SizedBox(height: 12),
+                  Text(_resetError!, style: const TextStyle(fontSize: 13, color: AppColors.toneCritic)),
+                ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _resetLoading ? null : _sendResetCode,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: _resetLoading
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('코드 보내기', style: TextStyle(fontSize: 15)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => setState(() { _showResetEmail = false; _resetError = null; }),
+                  child: Text('돌아가기', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResetCodeView() {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '비밀번호 재설정',
+                  style: GoogleFonts.gowunBatang(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  '$_resetEmail\n으로 재설정 코드를 보냈어요',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+                ),
+                const SizedBox(height: 32),
+                TextField(
+                  controller: _resetCodeController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  maxLength: 6,
+                  style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w600),
+                  decoration: InputDecoration(
+                    hintText: '000000',
+                    hintStyle: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.4), fontSize: 24, letterSpacing: 8),
+                    counterText: '',
+                    filled: false,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border)),
+                    focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accent)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _newPasswordController,
+                  obscureText: true,
+                  decoration: _inputDecoration('새 비밀번호 (8자 이상)'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _newPasswordConfirmController,
+                  obscureText: true,
+                  decoration: _inputDecoration('새 비밀번호 확인'),
+                  onSubmitted: (_) => _submitReset(),
+                ),
+                if (_resetError != null) ...[
+                  const SizedBox(height: 12),
+                  Text(_resetError!, style: const TextStyle(fontSize: 13, color: AppColors.toneCritic)),
+                ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: _resetLoading ? null : _submitReset,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: _resetLoading
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('변경하기', style: TextStyle(fontSize: 15)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () async {
+                        await ApiService().forgotPassword(_resetEmail);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('새 재설정 코드를 보냈어요'), duration: Duration(seconds: 2)),
+                          );
+                        }
+                      },
+                      child: Text('코드 다시 보내기', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: () => setState(() {
+                        _showResetCode = false;
+                        _showResetEmail = false;
+                        _resetError = null;
+                        _resetCodeController.clear();
+                        _newPasswordController.clear();
+                        _newPasswordConfirmController.clear();
+                      }),
+                      child: Text('돌아가기', style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1352,7 +1352,7 @@
       cursor: pointer;
       padding: 8px;
     }
-    .auth-input.is-hidden, #authForm.is-hidden, #authVerify.is-hidden { display: none; }
+    .auth-input.is-hidden, #authForm.is-hidden, #authVerify.is-hidden, #authReset.is-hidden, #authResetVerify.is-hidden { display: none; }
 
     /* ====== 온보딩 ====== */
     .onboard-overlay {
@@ -1458,6 +1458,9 @@
         <input class="auth-input" id="authPassword" type="password" placeholder="비밀번호 (8자 이상)" autocomplete="current-password">
         <input class="auth-input is-hidden" id="authPasswordConfirm" type="password" placeholder="비밀번호 확인" autocomplete="new-password">
         <button class="auth-submit" id="authSubmit">로그인</button>
+        <div class="auth-verify-actions" id="authForgotWrap">
+          <button class="auth-link" id="authForgot">비밀번호를 잊으셨나요?</button>
+        </div>
       </div>
       <!-- 인증 코드 입력 -->
       <div id="authVerify" class="is-hidden">
@@ -1467,6 +1470,27 @@
         <div class="auth-verify-actions">
           <button class="auth-link" id="authResend">코드 다시 보내기</button>
           <button class="auth-link" id="authBackToForm">돌아가기</button>
+        </div>
+      </div>
+      <!-- 비밀번호 재설정 - 이메일 입력 -->
+      <div id="authReset" class="is-hidden">
+        <p class="auth-verify-desc">비밀번호를 재설정할 이메일을 입력해주세요</p>
+        <input class="auth-input" id="authResetEmail" type="email" placeholder="이메일" autocomplete="email">
+        <button class="auth-submit" id="authResetSend">코드 보내기</button>
+        <div class="auth-verify-actions">
+          <button class="auth-link" id="authResetBack">돌아가기</button>
+        </div>
+      </div>
+      <!-- 비밀번호 재설정 - 코드 + 새 비밀번호 -->
+      <div id="authResetVerify" class="is-hidden">
+        <p class="auth-verify-desc" id="authResetVerifyDesc"></p>
+        <input class="auth-input auth-code-input" id="authResetCode" type="text" inputmode="numeric" maxlength="6" placeholder="000000">
+        <input class="auth-input" id="authNewPassword" type="password" placeholder="새 비밀번호 (8자 이상)">
+        <input class="auth-input" id="authNewPasswordConfirm" type="password" placeholder="새 비밀번호 확인">
+        <button class="auth-submit" id="authResetSubmit">변경하기</button>
+        <div class="auth-verify-actions">
+          <button class="auth-link" id="authResetResend">코드 다시 보내기</button>
+          <button class="auth-link" id="authResetBackToForm">돌아가기</button>
         </div>
       </div>
     </div>
@@ -1733,6 +1757,10 @@
       function showFormUI() {
         authForm.classList.remove('is-hidden');
         authVerify.classList.add('is-hidden');
+        var r = document.getElementById('authReset');
+        var rv = document.getElementById('authResetVerify');
+        if (r) r.classList.add('is-hidden');
+        if (rv) rv.classList.add('is-hidden');
         authError.textContent = '';
         document.querySelector('.auth-tabs').style.display = '';
       }
@@ -1870,6 +1898,135 @@
       });
       authPasswordConfirm.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') authSubmit.click();
+      });
+
+      // ─── 비밀번호 재설정 ───
+      var authReset = document.getElementById('authReset');
+      var authResetVerify = document.getElementById('authResetVerify');
+      var authResetEmail = document.getElementById('authResetEmail');
+      var authResetSend = document.getElementById('authResetSend');
+      var authResetCode = document.getElementById('authResetCode');
+      var authNewPassword = document.getElementById('authNewPassword');
+      var authNewPasswordConfirm = document.getElementById('authNewPasswordConfirm');
+      var authResetSubmit = document.getElementById('authResetSubmit');
+      var authResetVerifyDesc = document.getElementById('authResetVerifyDesc');
+      var resetEmail = '';
+
+      function showResetUI() {
+        authForm.classList.add('is-hidden');
+        authVerify.classList.add('is-hidden');
+        authResetVerify.classList.add('is-hidden');
+        authReset.classList.remove('is-hidden');
+        authError.textContent = '';
+        document.querySelector('.auth-tabs').style.display = 'none';
+        authResetEmail.value = authEmail.value.trim();
+        authResetEmail.focus();
+      }
+
+      function showResetVerifyUI(email) {
+        resetEmail = email;
+        authReset.classList.add('is-hidden');
+        authResetVerify.classList.remove('is-hidden');
+        authResetVerifyDesc.textContent = email + '으로 재설정 코드를 보냈어요';
+        authError.textContent = '';
+        authResetCode.value = '';
+        authResetCode.focus();
+      }
+
+      document.getElementById('authForgot').addEventListener('click', showResetUI);
+
+      document.getElementById('authResetBack').addEventListener('click', showFormUI);
+      document.getElementById('authResetBackToForm').addEventListener('click', function() {
+        authResetVerify.classList.add('is-hidden');
+        showFormUI();
+      });
+
+      authResetSend.addEventListener('click', async function() {
+        var email = authResetEmail.value.trim();
+        if (!email) {
+          authError.textContent = '이메일을 입력해주세요';
+          return;
+        }
+        authResetSend.disabled = true;
+        authError.textContent = '';
+        try {
+          await fetch('/api/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+          });
+          showResetVerifyUI(email);
+        } catch (e) {
+          authError.textContent = '서버에 연결할 수 없습니다';
+        } finally {
+          authResetSend.disabled = false;
+        }
+      });
+
+      authResetEmail.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') authResetSend.click();
+      });
+
+      authResetSubmit.addEventListener('click', async function() {
+        var code = authResetCode.value.trim();
+        var pw = authNewPassword.value;
+        var pwConfirm = authNewPasswordConfirm.value;
+        if (code.length !== 6) {
+          authError.textContent = '6자리 코드를 입력해주세요';
+          return;
+        }
+        if (pw.length < 8) {
+          authError.textContent = '비밀번호는 8자 이상이어야 해요';
+          return;
+        }
+        if (pw !== pwConfirm) {
+          authError.textContent = '비밀번호가 일치하지 않아요';
+          return;
+        }
+        authResetSubmit.disabled = true;
+        authError.textContent = '';
+        try {
+          var res = await fetch('/api/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: resetEmail, code: code, password: pw })
+          });
+          var data = await res.json();
+          if (!res.ok) {
+            authError.textContent = data.error || '문제가 발생했습니다';
+            return;
+          }
+          authToken = data.token;
+          localStorage.setItem('mote_token', authToken);
+          hideAuthOverlay();
+          initApp();
+        } catch (e) {
+          authError.textContent = '서버에 연결할 수 없습니다';
+        } finally {
+          authResetSubmit.disabled = false;
+        }
+      });
+
+      authResetCode.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') authNewPassword.focus();
+      });
+      authNewPassword.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') authNewPasswordConfirm.focus();
+      });
+      authNewPasswordConfirm.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') authResetSubmit.click();
+      });
+
+      document.getElementById('authResetResend').addEventListener('click', async function() {
+        var btn = document.getElementById('authResetResend');
+        btn.disabled = true;
+        await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: resetEmail })
+        });
+        authResetVerifyDesc.textContent = '새 재설정 코드를 보냈어요';
+        setTimeout(function() { btn.disabled = false; }, 3000);
       });
 
       // 로그아웃

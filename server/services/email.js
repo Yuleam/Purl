@@ -55,4 +55,43 @@ async function sendVerificationCode(toEmail, code) {
   }
 }
 
-module.exports = { sendVerificationCode };
+async function sendPasswordResetCode(toEmail, code) {
+  const client = getClient();
+  if (!client) {
+    console.warn(`[email] 재설정 코드 ${code} → ${toEmail} (API 키 미설정, 로그만 출력)`);
+    return false;
+  }
+
+  try {
+    const { data, error } = await client.emails.send({
+      from: 'Mote <onboarding@resend.dev>',
+      to: toEmail,
+      subject: 'Mote 비밀번호 재설정',
+      html: `
+        <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 32px;">
+          <h2 style="color: #2c2420; font-weight: 400;">Mote</h2>
+          <p style="color: #555; font-size: 15px; line-height: 1.6;">
+            비밀번호를 재설정하려면 아래 코드를 입력해주세요.
+          </p>
+          <div style="background: #f5f0e8; border-radius: 20px; padding: 24px; text-align: center; margin: 24px 0;">
+            <span style="font-size: 32px; letter-spacing: 8px; font-weight: 600; color: #2c2420;">${code}</span>
+          </div>
+          <p style="color: #999; font-size: 13px;">
+            이 코드는 10분 동안 유효합니다. 요청하지 않았다면 무시해주세요.
+          </p>
+        </div>
+      `,
+    });
+
+    if (error) {
+      console.error('[email] 재설정 코드 발송 실패:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('[email] 재설정 코드 발송 에러:', err.message);
+    return false;
+  }
+}
+
+module.exports = { sendVerificationCode, sendPasswordResetCode };

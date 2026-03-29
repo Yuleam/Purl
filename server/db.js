@@ -58,6 +58,16 @@ function initDB() {
   // 마이그레이션: attempts 컬럼
   try { _db.exec(`ALTER TABLE email_verification_codes ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0`); } catch (e) {}
 
+  // 비밀번호 재설정 코드
+  _db.exec(`CREATE TABLE IF NOT EXISTS password_reset_codes (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    code TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0,
+    attempts INTEGER NOT NULL DEFAULT 0
+  )`);
+
   // 사용자 프로필
   _db.exec(`CREATE TABLE IF NOT EXISTS user_profiles (
     user_id TEXT PRIMARY KEY,
