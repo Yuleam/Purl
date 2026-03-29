@@ -17,7 +17,6 @@ function getClient() {
 }
 
 async function sendVerificationCode(toEmail, code) {
-  console.log('[email] sendVerificationCode 호출:', toEmail);
   const client = getClient();
   if (!client) {
     console.warn(`[email] 인증 코드 ${code} → ${toEmail} (API 키 미설정, 로그만 출력)`);
@@ -49,7 +48,6 @@ async function sendVerificationCode(toEmail, code) {
       console.error('[email] 발송 실패:', error);
       return false;
     }
-    console.log('[email] 발송 성공:', toEmail, 'id:', data?.id);
     return true;
   } catch (err) {
     console.error('[email] 발송 에러:', err.message);

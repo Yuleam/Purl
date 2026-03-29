@@ -23,7 +23,6 @@ function generateCode() {
 
 // POST /api/auth/register — 가입 + 인증 코드 발송
 router.post('/register', async (req, res) => {
-  console.log('[register] 요청 수신:', req.body?.email);
   try {
     const { email, password } = req.body;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,7 +72,6 @@ router.post('/register', async (req, res) => {
     );
 
     const emailSent = await sendVerificationCode(normalizedEmail, code);
-    console.log('[register] 코드 생성:', code, '이메일 발송:', emailSent);
 
     res.status(201).json({
       needsVerification: true,

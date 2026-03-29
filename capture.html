@@ -1612,13 +1612,6 @@
       'use strict';
 
       // ─── 디버그 (Capacitor 진단용, 문제 해결 후 제거) ───
-      var _dbg = document.createElement('div');
-      _dbg.id = '_dbg';
-      _dbg.style.cssText = 'position:fixed;bottom:60px;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;padding:12px;z-index:99999;font:12px monospace;max-height:40vh;overflow:auto;';
-      _dbg.textContent = '[1] JS started';
-      document.body.appendChild(_dbg);
-      function _log(msg) { _dbg.textContent += '\n' + msg; }
-      window.onerror = function(m,s,l) { _log('[ERR] ' + m + ' L:' + l); };
 
       var API = '/api';
 
@@ -1633,7 +1626,6 @@
         localStorage.removeItem('purl_onboarding');
       }
       var authToken = localStorage.getItem('mote_token');
-      _log('[2] token=' + (authToken ? 'yes' : 'no'));
 
       function apiFetch(url, opts) {
         opts = opts || {};
@@ -1961,9 +1953,7 @@
       var sharedUrl = params.get('url') || '';
       var isFromShare = !!(sharedText || sharedTitle || sharedUrl);
 
-      _log('[3] auth check start');
       if (!authToken) {
-        _log('[4] showing auth overlay');
         showAuthOverlay();
       } else if (isFromShare) {
         appInitialized = true;
